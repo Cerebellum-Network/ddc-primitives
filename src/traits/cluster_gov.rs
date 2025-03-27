@@ -6,20 +6,20 @@ pub type MemberCount = u32;
 
 /// Default voting strategy when a member is inactive.
 pub trait DefaultVote {
-	/// Get the default voting strategy, given:
-	///
-	/// - Whether the prime member voted Aye.
-	/// - Raw number of yes votes.
-	/// - Raw number of no votes.
-	/// - Total number of member count.
-	fn default_vote(
-		prime_vote: Option<bool>,
-		yes_votes: MemberCount,
-		no_votes: MemberCount,
-		len: MemberCount,
-	) -> bool;
+    /// Get the default voting strategy, given:
+    ///
+    /// - Whether the prime member voted Aye.
+    /// - Raw number of yes votes.
+    /// - Raw number of no votes.
+    /// - Total number of member count.
+    fn default_vote(
+        prime_vote: Option<bool>,
+        yes_votes: MemberCount,
+        no_votes: MemberCount,
+        len: MemberCount,
+    ) -> bool;
 }
 
 pub trait SeatsConsensus {
-	fn get_threshold(seats: MemberCount) -> MemberCount;
+    fn get_threshold(seats: MemberCount) -> MemberCount;
 }
