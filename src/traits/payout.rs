@@ -1,11 +1,10 @@
 use frame_system::pallet_prelude::BlockNumberFor;
-use scale_info::prelude::string::String;
 use sp_runtime::DispatchResult;
 use sp_std::boxed::Box;
 
 use crate::{
-    BatchIndex, ClusterId, Fingerprint, MMRProof, PayableUsageHash, PaymentEra, PayoutError,
-    PayoutFingerprintParams, PayoutReceiptParams, PayoutState,
+    BatchIndex, ClusterId, EhdEra, Fingerprint, MMRProof, PayableUsageHash, PaymentEra,
+    PayoutError, PayoutFingerprintParams, PayoutReceiptParams, PayoutState,
 };
 
 pub trait PayoutProcessor<T: frame_system::Config> {
@@ -13,7 +12,7 @@ pub trait PayoutProcessor<T: frame_system::Config> {
     fn commit_payout_fingerprint(
         validator: T::AccountId,
         cluster_id: ClusterId,
-        ehd_id: String,
+        era: EhdEra,
         payers_merkle_root: PayableUsageHash,
         payees_merkle_root: PayableUsageHash,
     ) -> DispatchResult;
