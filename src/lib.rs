@@ -640,7 +640,7 @@ pub struct PayoutReceiptParams {
 #[derive(Default)]
 pub struct PayoutFingerprintParams<AccountId> {
     pub cluster_id: ClusterId,
-    pub ehd_id: String,
+    pub era: EhdEra,
     pub payers_merkle_root: PayableUsageHash,
     pub payees_merkle_root: PayableUsageHash,
     pub validators: BTreeSet<AccountId>,
