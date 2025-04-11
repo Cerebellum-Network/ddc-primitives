@@ -582,7 +582,7 @@ pub mod sr25519 {
     mod app_sr25519 {
         use sp_application_crypto::{app_crypto, sr25519};
 
-        use crate::{String, DAC_VERIFICATION_KEY_TYPE};
+        use crate::DAC_VERIFICATION_KEY_TYPE;
 
         app_crypto!(sr25519, DAC_VERIFICATION_KEY_TYPE);
     }
@@ -602,7 +602,7 @@ pub mod crypto {
         MultiSignature, MultiSigner,
     };
 
-    use crate::{String, DAC_VERIFICATION_KEY_TYPE};
+    use crate::DAC_VERIFICATION_KEY_TYPE;
 
     app_crypto!(sr25519, DAC_VERIFICATION_KEY_TYPE);
     pub struct OffchainIdentifierId;
@@ -640,7 +640,9 @@ pub struct PayoutReceiptParams {
 #[derive(Default)]
 pub struct PayoutFingerprintParams<AccountId> {
     pub cluster_id: ClusterId,
-    pub ehd_id: String,
+    pub era: EhdEra,
+    pub insp_hash: H256,
+    pub ehd_merkle_root: H256,
     pub payers_merkle_root: PayableUsageHash,
     pub payees_merkle_root: PayableUsageHash,
     pub validators: BTreeSet<AccountId>,
