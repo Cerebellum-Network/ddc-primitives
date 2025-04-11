@@ -1,4 +1,5 @@
 use frame_system::pallet_prelude::BlockNumberFor;
+use sp_core::H256;
 use sp_runtime::DispatchResult;
 use sp_std::boxed::Box;
 
@@ -12,7 +13,9 @@ pub trait PayoutProcessor<T: frame_system::Config> {
     fn commit_payout_fingerprint(
         validator: T::AccountId,
         cluster_id: ClusterId,
-        era: EhdEra,
+        era_id: EhdEra,
+        insp_hash: H256,
+        ehd_merkle_root: H256,
         payers_merkle_root: PayableUsageHash,
         payees_merkle_root: PayableUsageHash,
     ) -> DispatchResult;
