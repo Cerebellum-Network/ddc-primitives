@@ -659,7 +659,7 @@ pub struct PayoutReceiptParams {
 pub struct PayoutFingerprintParams<AccountId> {
     pub cluster_id: ClusterId,
     pub era: EhdEra,
-    pub insp_hash: H256,
+    pub inspection_hash: H256,
     pub ehd_merkle_root: H256,
     pub payers_merkle_root: PayableUsageHash,
     pub payees_merkle_root: PayableUsageHash,
