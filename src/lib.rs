@@ -499,6 +499,15 @@ pub struct BucketUsage {
     pub number_of_gets: u64,
 }
 
+impl BucketUsage {
+    pub fn add(&mut self, other: &BucketUsage) {
+        self.transferred_bytes += other.transferred_bytes;
+        self.stored_bytes += other.stored_bytes;
+        self.number_of_puts += other.number_of_puts;
+        self.number_of_gets += other.number_of_gets;
+    }
+}
+
 /// Stores charge in tokens(units) of customer as per BucketUsage
 #[derive(PartialEq, Encode, Decode, RuntimeDebug, TypeInfo, Default, Clone)]
 pub struct CustomerCharge {
@@ -528,6 +537,15 @@ pub struct NodeUsage {
     pub stored_bytes: i64,
     pub number_of_puts: u64,
     pub number_of_gets: u64,
+}
+
+impl NodeUsage {
+    pub fn add(&mut self, other: &NodeUsage) {
+        self.transferred_bytes += other.transferred_bytes;
+        self.stored_bytes += other.stored_bytes;
+        self.number_of_puts += other.number_of_puts;
+        self.number_of_gets += other.number_of_gets;
+    }
 }
 
 /// Stores reward in tokens(units) of node provider as per NodeUsage
@@ -641,7 +659,7 @@ pub struct PayoutReceiptParams {
 pub struct PayoutFingerprintParams<AccountId> {
     pub cluster_id: ClusterId,
     pub era: EhdEra,
-    pub insp_hash: H256,
+    pub inspection_hash: H256,
     pub ehd_merkle_root: H256,
     pub payers_merkle_root: PayableUsageHash,
     pub payees_merkle_root: PayableUsageHash,
@@ -661,11 +679,11 @@ pub struct NodeStorageUsage<AccountId> {
 }
 
 #[allow(unused)]
-#[derive(Debug, Serialize, Deserialize, Clone, Encode, Decode, Hash, TypeInfo, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Encode, Decode, TypeInfo, PartialEq)]
 pub enum AggregateKey {
-    NodeAggregateKey(String),
-    BucketSubAggregateKey(BucketId, String),
+    NodeAggregateKey(NodePubKey),
     BucketAggregateKey(BucketId),
+    BucketSubAggregateKey(BucketId, NodePubKey),
 }
 
 pub fn try_hex_from_string(value: String) -> Result<H256, &'static str> {
