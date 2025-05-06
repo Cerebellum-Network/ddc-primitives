@@ -80,7 +80,7 @@ pub trait PayoutProcessor<T: frame_system::Config> {
         vault: T::AccountId,
         params: PayoutReceiptParams,
         finalized_at: Option<BlockNumberFor<T>>,
-    );
+    ) -> Result<(), PayoutError>;
 
     fn create_payout_fingerprint(params: PayoutFingerprintParams<T::AccountId>) -> Fingerprint;
 }
