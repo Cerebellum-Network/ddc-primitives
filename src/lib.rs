@@ -571,6 +571,7 @@ pub enum NodeRepositoryError {
 #[derive(Debug, PartialEq)]
 pub enum PayoutError {
     PayoutReceiptDoesNotExist,
+    InvalidPayoutReceiptParams,
 }
 
 #[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq, Default)]
