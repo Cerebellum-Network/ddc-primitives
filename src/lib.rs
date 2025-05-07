@@ -595,7 +595,6 @@ pub struct BucketParams {
 
 pub const DAC_VERIFICATION_KEY_TYPE: KeyTypeId = KeyTypeId(*b"cer!");
 
-pub const VERIFY_AGGREGATOR_RESPONSE_SIGNATURE: bool = false;
 
 pub mod sr25519 {
     mod app_sr25519 {
