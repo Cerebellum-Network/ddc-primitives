@@ -593,7 +593,6 @@ pub struct BucketParams {
 
 pub const DAC_VERIFICATION_KEY_TYPE: KeyTypeId = KeyTypeId(*b"cer!");
 
-
 pub mod sr25519 {
     mod app_sr25519 {
         use sp_application_crypto::{app_crypto, sr25519};
