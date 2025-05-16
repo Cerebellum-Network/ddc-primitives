@@ -1,6 +1,6 @@
 use sp_runtime::DispatchError;
 
-use crate::BucketId;
+use crate::{BucketId, ClusterId};
 
 pub trait CustomerCharger<T: frame_system::Config> {
     fn charge_customer(
@@ -11,8 +11,8 @@ pub trait CustomerCharger<T: frame_system::Config> {
 }
 
 pub trait CustomerDepositor<T: frame_system::Config> {
-    fn deposit(customer: T::AccountId, amount: u128) -> Result<(), DispatchError>;
-    fn deposit_extra(customer: T::AccountId, amount: u128) -> Result<(), DispatchError>;
+    fn deposit(customer: T::AccountId, cluster_id: ClusterId, amount: u128) -> Result<(), DispatchError>;
+    fn deposit_extra(customer: T::AccountId, cluster_id: ClusterId, amount: u128) -> Result<(), DispatchError>;
 }
 
 pub trait CustomerVisitor<T: frame_system::Config> {
