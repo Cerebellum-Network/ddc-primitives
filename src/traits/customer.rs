@@ -4,8 +4,9 @@ use crate::{BucketId, ClusterId};
 
 pub trait CustomerCharger<T: frame_system::Config> {
     fn charge_customer(
-        content_owner: T::AccountId,
+        bucket_owner: T::AccountId,
         payout_vault: T::AccountId,
+        cluster_id: ClusterId,
         amount: u128,
     ) -> Result<u128, DispatchError>;
 }
