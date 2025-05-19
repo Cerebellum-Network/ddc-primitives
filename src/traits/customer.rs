@@ -12,8 +12,16 @@ pub trait CustomerCharger<T: frame_system::Config> {
 }
 
 pub trait CustomerDepositor<T: frame_system::Config> {
-    fn deposit(customer: T::AccountId, cluster_id: ClusterId, amount: u128) -> Result<(), DispatchError>;
-    fn deposit_extra(customer: T::AccountId, cluster_id: ClusterId, amount: u128) -> Result<(), DispatchError>;
+    fn deposit(
+        customer: T::AccountId,
+        cluster_id: ClusterId,
+        amount: u128,
+    ) -> Result<(), DispatchError>;
+    fn deposit_extra(
+        customer: T::AccountId,
+        cluster_id: ClusterId,
+        amount: u128,
+    ) -> Result<(), DispatchError>;
 }
 
 pub trait CustomerVisitor<T: frame_system::Config> {
