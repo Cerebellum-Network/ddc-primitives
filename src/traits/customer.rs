@@ -25,6 +25,7 @@ pub trait CustomerDepositor<T: frame_system::Config> {
     ) -> Result<(), DispatchError>;
 
     fn deposit_for(
+        funder: T::AccountId,
         customer: T::AccountId,
         cluster_id: ClusterId,
         amount: u128,
