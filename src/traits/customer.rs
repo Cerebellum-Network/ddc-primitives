@@ -4,7 +4,7 @@ use crate::{BucketId, ClusterId};
 
 pub trait CustomerCharger<T: frame_system::Config> {
     fn charge_customer(
-        bucket_owner: T::AccountId,
+        customer: T::AccountId,
         payout_vault: T::AccountId,
         cluster_id: ClusterId,
         amount: u128,
@@ -17,7 +17,14 @@ pub trait CustomerDepositor<T: frame_system::Config> {
         cluster_id: ClusterId,
         amount: u128,
     ) -> Result<(), DispatchError>;
+
     fn deposit_extra(
+        customer: T::AccountId,
+        cluster_id: ClusterId,
+        amount: u128,
+    ) -> Result<(), DispatchError>;
+
+    fn deposit_for(
         customer: T::AccountId,
         cluster_id: ClusterId,
         amount: u128,
