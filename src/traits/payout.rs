@@ -1,7 +1,6 @@
 use frame_system::pallet_prelude::BlockNumberFor;
 use sp_core::H256;
 use sp_runtime::DispatchResult;
-use sp_std::boxed::Box;
 
 use crate::{
     BatchIndex, ClusterId, EhdEra, Fingerprint, MMRProof, PayableUsageHash, PaymentEra,
@@ -83,15 +82,4 @@ pub trait PayoutProcessor<T: frame_system::Config> {
     ) -> Result<(), PayoutError>;
 
     fn create_payout_fingerprint(params: PayoutFingerprintParams<T::AccountId>) -> Fingerprint;
-}
-
-pub trait StorageUsageProvider<Key, Item> {
-    type Error: sp_std::fmt::Debug;
-
-    fn iter_storage_usage<'a>(cluster_id: &'a ClusterId) -> Box<dyn Iterator<Item = Item> + 'a>;
-
-    fn iter_storage_usage_from<'a>(
-        cluster_id: &'a ClusterId,
-        from: &'a Key,
-    ) -> Result<Box<dyn Iterator<Item = Item> + 'a>, Self::Error>;
 }
