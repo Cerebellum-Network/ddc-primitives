@@ -9,7 +9,7 @@ use scale_info::{
     TypeInfo,
 };
 use serde::{Deserialize, Serialize};
-use sp_core::{crypto::KeyTypeId, hash::H160, H256};
+use sp_core::{crypto::KeyTypeId, hash::H160, H256, DecodeWithMemTracking};
 use sp_runtime::{
     generic,
     traits::{BlakeTwo256, IdentifyAccount, Verify},
@@ -555,7 +555,7 @@ pub struct ProviderReward {
     pub gets: u128,     // reward in tokens for NodeUsage::number_of_gets
 }
 
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq, Default)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Default)]
 pub struct MMRProof {
     pub proof: Vec<DeltaUsageHash>,
 }
