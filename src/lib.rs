@@ -374,6 +374,7 @@ impl From<AccountId32Hex> for AccountId32 {
     Serialize,
     Deserialize,
     Clone,
+    DecodeWithMemTracking,
     Hash,
     Ord,
     PartialOrd,
@@ -439,7 +440,7 @@ pub enum NodeParams {
 }
 
 /// DDC cluster status
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Serialize, Deserialize)]
 pub enum ClusterStatus {
     Unbonded,
     Bonded,
@@ -448,28 +449,28 @@ pub enum ClusterStatus {
 }
 
 /// DDC node kind added to DDC cluster
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Serialize, Deserialize)]
 pub enum ClusterNodeKind {
     Genesis,
     External,
 }
 
 /// DDC node status in to DDC cluster
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Serialize, Deserialize)]
 pub enum ClusterNodeStatus {
     AwaitsValidation,
     ValidationSucceeded,
     ValidationFailed,
 }
 
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
 pub struct ClusterNodeState<BlockNumber> {
     pub kind: ClusterNodeKind,
     pub status: ClusterNodeStatus,
     pub added_at: BlockNumber,
 }
 
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq, Default)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Default)]
 pub struct ClusterNodesStats {
     pub await_validation: ClusterNodesCount,
     pub validation_succeeded: ClusterNodesCount,
@@ -508,7 +509,7 @@ impl BucketUsage {
 }
 
 /// Stores charge in tokens(units) of customer as per BucketUsage
-#[derive(PartialEq, Encode, Decode, RuntimeDebug, TypeInfo, Default, Clone)]
+#[derive(PartialEq, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, Default, Clone)]
 pub struct CustomerCharge {
     pub transfer: u128, // charge in tokens for BucketUsage::transferred_bytes
     pub storage: u128,  // charge in tokens for BucketUsage::stored_bytes
