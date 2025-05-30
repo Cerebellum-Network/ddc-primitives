@@ -397,6 +397,7 @@ pub enum StorageNodeMode {
     Serialize,
     Deserialize,
     Clone,
+    DecodeWithMemTracking,
     Hash,
     Ord,
     PartialOrd,
