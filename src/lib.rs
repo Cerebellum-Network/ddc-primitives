@@ -167,7 +167,7 @@ pub struct AggregatorInfo {
 // The `StoragePubKey` is the only variant of DDC node key. This enum should be replaced with
 // trait-bounded type.
 #[derive(
-    Debug, Serialize, Deserialize, Clone, Ord, PartialOrd, PartialEq, Eq, Encode, Decode, TypeInfo,
+    Debug, Serialize, DecodeWithMemTracking, Deserialize, Clone, Ord, PartialOrd, PartialEq, Eq, Encode, Decode, TypeInfo,
 )]
 pub enum NodePubKey {
     StoragePubKey(StorageNodePubKey),
