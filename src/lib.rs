@@ -663,18 +663,6 @@ pub struct PayoutFingerprintParams<AccountId> {
     pub validators: BTreeSet<AccountId>,
 }
 
-pub struct BucketStorageUsage<AccountId> {
-    pub bucket_id: BucketId,
-    pub owner_id: AccountId,
-    pub stored_bytes: i64,
-}
-
-pub struct NodeStorageUsage<AccountId> {
-    pub node_key: NodePubKey,
-    pub provider_id: AccountId,
-    pub stored_bytes: i64,
-}
-
 #[allow(unused)]
 #[derive(Debug, Serialize, Deserialize, Clone, Encode, Decode, TypeInfo, PartialEq)]
 pub enum AggregateKey {
