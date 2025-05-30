@@ -432,7 +432,7 @@ impl Default for StorageNodeParams {
 }
 
 // Params fields are always coming from extrinsic input
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
 pub enum NodeParams {
     StorageParams(StorageNodeParams),
 }
