@@ -483,6 +483,7 @@ pub struct ClusterNodesStats {
     Eq,
     Encode,
     Decode,
+    DecodeWithMemTracking,
     Debug,
     TypeInfo,
     Default,
@@ -523,6 +524,7 @@ pub struct CustomerCharge {
     Eq,
     Encode,
     Decode,
+    DecodeWithMemTracking,
     Debug,
     TypeInfo,
     Default,
@@ -549,7 +551,7 @@ impl NodeUsage {
 }
 
 /// Stores reward in tokens(units) of node provider as per NodeUsage
-#[derive(PartialEq, Encode, Decode, RuntimeDebug, TypeInfo, Default, Clone)]
+#[derive(PartialEq, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, Default, Clone)]
 pub struct ProviderReward {
     pub transfer: u128, // reward in tokens for NodeUsage::transferred_bytes
     pub storage: u128,  // reward in tokens for NodeUsage::stored_bytes
@@ -574,7 +576,7 @@ pub enum PayoutError {
     InvalidPayoutReceiptParams,
 }
 
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq, Default)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Default)]
 // don't remove or change numbers, if needed add a new state to the end with new number
 // DAC uses the state value for integration!
 pub enum PayoutState {
@@ -588,7 +590,7 @@ pub enum PayoutState {
     Finalized = 7,
 }
 
-#[derive(PartialEq, Eq, Clone, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[derive(PartialEq, Eq, Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo)]
 pub struct BucketParams {
     pub is_public: bool,
 }
@@ -666,7 +668,7 @@ pub struct PayoutFingerprintParams<AccountId> {
 }
 
 #[allow(unused)]
-#[derive(Debug, Serialize, Deserialize, Clone, Encode, Decode, TypeInfo, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, PartialEq)]
 pub enum AggregateKey {
     NodeAggregateKey(NodePubKey),
     BucketAggregateKey(BucketId),
