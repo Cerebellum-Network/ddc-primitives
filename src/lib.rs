@@ -96,7 +96,7 @@ impl Merge for MergeMMRHash {
 
 // ClusterParams includes Governance non-sensetive parameters only
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
 pub struct ClusterParams<AccountId> {
     pub node_provider_auth_contract: Option<AccountId>,
     pub erasure_coding_required: u32,
@@ -118,7 +118,7 @@ impl<AccountId> Default for ClusterParams<AccountId> {
 
 // ClusterProtocolParams includes Governance sensitive parameters
 #[derive(
-    Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq, Default, Serialize, Deserialize,
+    Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Default, Serialize, Deserialize,
 )]
 #[scale_info(skip_type_params(Balance, BlockNumber, T))]
 pub struct ClusterProtocolParams<Balance, BlockNumber> {
@@ -134,7 +134,7 @@ pub struct ClusterProtocolParams<Balance, BlockNumber> {
     pub unit_per_get_request: u128,
 }
 
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
 pub struct ClusterPricingParams {
     pub unit_per_mb_stored: u128,
     pub unit_per_mb_streamed: u128,
@@ -142,14 +142,14 @@ pub struct ClusterPricingParams {
     pub unit_per_get_request: u128,
 }
 
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
 pub struct ClusterFeesParams {
     pub treasury_share: Perquintill,
     pub validators_share: Perquintill,
     pub cluster_reserve_share: Perquintill,
 }
 
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
 pub struct ClusterBondingParams<BlockNumber> {
     pub storage_bond_size: u128,
     pub storage_chill_delay: BlockNumber,
@@ -157,7 +157,7 @@ pub struct ClusterBondingParams<BlockNumber> {
 }
 
 #[derive(
-    Debug, Serialize, Deserialize, Clone, Ord, PartialOrd, PartialEq, Eq, Encode, Decode, TypeInfo,
+    Debug, Serialize, Deserialize, Clone, Ord, PartialOrd, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo,
 )]
 pub struct AggregatorInfo {
     pub node_pub_key: NodePubKey,
@@ -203,7 +203,7 @@ impl TryFrom<String> for NodePubKey {
     }
 }
 
-#[derive(Clone, PartialOrd, Serialize, Deserialize, Ord, Eq, PartialEq, Encode, Decode, Debug)]
+#[derive(Clone, PartialOrd, Serialize, Deserialize, Ord, Eq, PartialEq, Encode, Decode, DecodeWithMemTracking, Debug)]
 pub struct EHDId(pub ClusterId, pub NodePubKey, pub EhdEra);
 
 impl From<EHDId> for String {
@@ -258,7 +258,7 @@ impl TryFrom<&str> for EHDId {
     }
 }
 
-#[derive(Clone, PartialOrd, Ord, Eq, PartialEq, Encode, Decode, Debug)]
+#[derive(Clone, PartialOrd, Ord, Eq, PartialEq, Encode, Decode, DecodeWithMemTracking, Debug)]
 pub struct PHDId(pub NodePubKey, pub EhdEra);
 
 impl From<PHDId> for String {
@@ -297,7 +297,7 @@ impl TryFrom<&str> for PHDId {
     }
 }
 
-#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
 pub enum NodeType {
     Storage = 1,
 }
@@ -322,7 +322,7 @@ impl TryFrom<u8> for NodeType {
 
 /// The type for keeping account id in hexadecimal notation (prefixed with '0x')
 #[derive(
-    Debug, Serialize, Deserialize, Hash, Clone, Ord, PartialOrd, PartialEq, Eq, Encode, Decode,
+    Debug, Serialize, Deserialize, Hash, Clone, Ord, PartialOrd, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking,
 )]
 pub struct AccountId32Hex {
     pub id: [u8; 32],
