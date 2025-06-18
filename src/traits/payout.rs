@@ -83,3 +83,7 @@ pub trait PayoutProcessor<T: frame_system::Config> {
 
     fn create_payout_fingerprint(params: PayoutFingerprintParams<T::AccountId>) -> Fingerprint;
 }
+
+pub trait FeeHandler<AccountId> {
+    fn handle_fee(source: AccountId, fee_amount: u128) -> DispatchResult;
+}
