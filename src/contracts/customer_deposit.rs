@@ -10,7 +10,8 @@ pub mod traits {
     use super::types::Ledger;
     use super::errors::Error;
 
-    /// This trait is required to be implemented by any customer deposit contract as it enables charges for DDC service.
+    /// This trait is required to be implemented by any customer deposit contract 
+    /// as it enables charges for DDC service required by the protocol.
     #[ink::trait_definition]
     pub trait DdcPayoutsPayer {
         #[ink(message)]
@@ -21,13 +22,16 @@ pub mod traits {
         ) -> Vec<(AccountId, Balance)>;
     }
 
-    /// This trait is required to be implemented by any customer deposit contract as it enables fetching of customer balances in DDC cluster.
+    /// This trait is required to be implemented by any customer deposit contract 
+    /// as it enables fetching of customer balances in DDC cluster required by the protocol.
     #[ink::trait_definition]
     pub trait DdcBalancesFetcher {
         #[ink(message)]
         fn get_balance(&self, owner: AccountId) -> Option<Ledger>;
     }
 
+    /// This trait is optional to be implemented by any customer deposit contract 
+    /// as it enables utilities (i.e. wallet, payment gateway, ramp service, etc.) that are not required by the protocol.
     #[ink::trait_definition]
     pub trait DdcBalancesDepositor {
         #[ink(message, payable)]
