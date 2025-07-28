@@ -8,6 +8,7 @@ use crate::BlockNumber;
 pub mod traits {
     use super::*;
     use super::types::Ledger;
+    use super::errors::Error;
 
     /// This trait is required to be implemented by any customer deposit contract as it enables charges for DDC service.
     #[ink::trait_definition]
@@ -25,6 +26,21 @@ pub mod traits {
     pub trait DdcBalancesFetcher {
         #[ink(message)]
         fn get_balance(&self, owner: AccountId) -> Option<Ledger>;
+    }
+
+    #[ink::trait_definition]
+    pub trait DdcBalancesDepositor {
+        #[ink(message, payable)]
+        fn deposit(&mut self) -> Result<(), Error>;
+
+        #[ink(message, payable)]
+		fn deposit_for(&mut self, owner: AccountId) -> Result<(), Error>;
+
+        #[ink(message)]
+		fn unlock_deposit(&mut self, value: Balance) -> Result<(), Error>;
+
+        #[ink(message)]
+		fn withdraw_unlocked(&mut self) -> Result<(), Error>;
     }
 }
 
@@ -100,5 +116,13 @@ pub mod types {
         pub value: Balance,
         /// Block number at which point it'll be unlocked.
         pub block: BlockNumber,
+    }
+}
+
+pub mod errors {
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    #[ink::scale_derive(Encode, Decode, TypeInfo)]
+    pub enum Error {
+        Code(u16),
     }
 }
