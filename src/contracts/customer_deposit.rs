@@ -2,7 +2,9 @@
 
 use ink::prelude::vec::Vec;
 use crate::contracts::{ClusterId, AccountId, Balance};
+use crate::BlockNumber;
 
+/// This trait is required to be implemented by any customer deposit contract as it enables charges for DAC-based payouts.
 #[ink::trait_definition]
 pub trait DdcPayoutsPayer {
     #[ink(message)]
@@ -11,6 +13,13 @@ pub trait DdcPayoutsPayer {
         vault: AccountId,
         batch: Vec<(AccountId, Balance)>,
     ) -> Vec<(AccountId, Balance)>;
+}
+
+/// This trait is required to be implemented by any customer deposit contract as it enables fetching of customer balances in DDC nodes.
+#[ink::trait_definition]
+pub trait DdcBalancesFetcher {
+    #[ink(message)]
+    fn get_balance(&self, owner: AccountId) -> Option<Ledger>;
 }
 
 #[ink::event]
@@ -48,4 +57,32 @@ pub struct DdcBalanceCharged {
     pub owner_id: AccountId,
     pub charged: Balance,
     pub expected: Balance,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[ink::scale_derive(Encode, Decode, TypeInfo)]
+pub struct Ledger {
+    /// The owner account whose balance is actually locked and can be used to pay for DDC
+    /// network usage.
+    pub owner: AccountId,
+    /// The total amount of the owner's balance that we are currently accounting for.
+    /// It's just `active` plus all the `unlocking` balances.
+    pub total: Balance,
+    /// The total amount of the owner's balance that will be accessible for DDC network payouts
+    /// in any forthcoming rounds.
+    pub active: Balance,
+    /// Any balance that is becoming free, which may eventually be transferred out of the owner
+    /// (assuming that the content owner has to pay for network usage). It is assumed that this
+    /// will be treated as a first in, first out queue where the new (higher value) eras get
+    /// pushed on the back.
+    pub unlocking: Vec<UnlockChunk>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[ink::scale_derive(Encode, Decode, TypeInfo)]
+pub struct UnlockChunk {
+    /// Amount of funds to be unlocked.
+    pub value: Balance,
+    /// Block number at which point it'll be unlocked.
+    pub block: BlockNumber,
 }
