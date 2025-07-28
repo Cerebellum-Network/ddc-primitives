@@ -7,7 +7,6 @@ pub mod pallet;
 pub mod payout;
 pub mod staking;
 pub mod validator;
-pub mod contract;
 
 pub use bucket::*;
 pub use cluster::*;
@@ -18,4 +17,3 @@ pub use pallet::*;
 pub use payout::*;
 pub use staking::*;
 pub use validator::*;
-pub use contract::*;

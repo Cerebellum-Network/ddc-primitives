@@ -17,6 +17,7 @@ use sp_runtime::{
 };
 use sp_std::collections::btree_set::BTreeSet;
 pub mod traits;
+pub mod contracts;
 use sp_std::str::FromStr;
 pub mod ocw_mutex;
 
@@ -121,7 +122,7 @@ impl<AccountId> Default for ClusterParams<AccountId> {
     Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Default, Serialize, Deserialize,
 )]
 #[scale_info(skip_type_params(Balance, BlockNumber, T))]
-pub struct ClusterProtocolParams<Balance, BlockNumber> {
+pub struct ClusterProtocolParams<Balance, BlockNumber, AccountId> {
     pub treasury_share: Perquintill,
     pub validators_share: Perquintill,
     pub cluster_reserve_share: Perquintill,
@@ -132,6 +133,7 @@ pub struct ClusterProtocolParams<Balance, BlockNumber> {
     pub unit_per_mb_streamed: u128,
     pub unit_per_put_request: u128,
     pub unit_per_get_request: u128,
+    pub customer_deposit_contract: AccountId,
 }
 
 #[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]

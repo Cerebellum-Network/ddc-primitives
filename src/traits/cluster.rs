@@ -38,11 +38,13 @@ pub trait ClusterProtocol<AccountId, BlockNumber, Balance>: ClusterQuery<Account
 
     fn get_reserve_account_id(cluster_id: &ClusterId) -> Result<AccountId, DispatchError>;
 
+    fn get_customer_deposit_contract(cluster_id: &ClusterId) -> Result<AccountId, DispatchError>;
+
     fn activate_cluster_protocol(cluster_id: &ClusterId) -> DispatchResult;
 
     fn update_cluster_protocol(
         cluster_id: &ClusterId,
-        cluster_protocol_params: ClusterProtocolParams<Balance, BlockNumber>,
+        cluster_protocol_params: ClusterProtocolParams<Balance, BlockNumber, AccountId>,
     ) -> DispatchResult;
 
     fn bond_cluster(cluster_id: &ClusterId) -> DispatchResult;
@@ -58,7 +60,7 @@ pub trait ClusterCreator<AccountId, BlockNumber, Balance> {
         cluster_manager_id: AccountId,
         cluster_reserve_id: AccountId,
         cluster_params: ClusterParams<AccountId>,
-        initial_protocol_params: ClusterProtocolParams<Balance, BlockNumber>,
+        initial_protocol_params: ClusterProtocolParams<Balance, BlockNumber, AccountId>,
     ) -> DispatchResult;
 }
 
