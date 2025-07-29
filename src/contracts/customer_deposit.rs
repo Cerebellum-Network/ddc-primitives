@@ -11,21 +11,10 @@ pub mod traits {
     use super::errors::Error;
 
     /// This trait is required to be implemented by any customer deposit contract 
-    /// as it enables charges for DDC service required by the protocol.
-    #[ink::trait_definition]
-    pub trait DdcPayoutsPayer {
-        #[ink(message)]
-        fn charge(
-            &mut self,
-            vault: AccountId,
-            batch: Vec<(AccountId, Balance)>,
-        ) -> Vec<(AccountId, Balance)>;
-    }
-
-    /// This trait is required to be implemented by any customer deposit contract 
     /// as it enables fetching of customer balances in DDC cluster required by the protocol.
     #[ink::trait_definition]
     pub trait DdcBalancesFetcher {
+        /// Fetches customer balance in DDC cluster.
         #[ink(message)]
         fn get_balance(&self, owner: AccountId) -> Option<Ledger>;
     }
@@ -34,17 +23,34 @@ pub mod traits {
     /// as it enables utilities (i.e. wallet, payment gateway, ramp service, etc.) that are not required by the protocol.
     #[ink::trait_definition]
     pub trait DdcBalancesDepositor {
+        /// Top up deposit balance on behalf its owner.
         #[ink(message, payable)]
         fn deposit(&mut self) -> Result<(), Error>;
 
+        /// Top up deposit balance for specific owner on behalf faucet.
         #[ink(message, payable)]
 		fn deposit_for(&mut self, owner: AccountId) -> Result<(), Error>;
 
+        /// Initiate unlocking of deposit balance on behalf its owner.
         #[ink(message)]
 		fn unlock_deposit(&mut self, value: Balance) -> Result<(), Error>;
 
+        /// Withdraw unlocked deposit balance on behalf its owner.
         #[ink(message)]
 		fn withdraw_unlocked(&mut self) -> Result<(), Error>;
+    }
+
+    /// This trait is required to be implemented by any customer deposit contract 
+    /// as it enables charges for DDC service required by the protocol.
+    #[ink::trait_definition]
+    pub trait DdcPayoutsPayer {
+        /// Charges customers for DDC service usage while DAC-based payouts are in progress.
+        #[ink(message)]
+        fn charge(
+            &mut self,
+            vault: AccountId,
+            batch: Vec<(AccountId, Balance)>,
+        ) -> Vec<(AccountId, Balance)>;
     }
 }
 
