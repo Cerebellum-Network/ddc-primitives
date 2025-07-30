@@ -17,6 +17,10 @@ pub mod traits {
         /// Fetches customer balance in DDC cluster.
         #[ink(message)]
         fn get_balance(&self, owner: AccountId) -> Option<Ledger>;
+
+        /// Fetches customers balances in DDC cluster in a paginated manner.
+        #[ink(message)]
+        fn get_balances(&self, last_index: u64, limit: u64) -> Vec<(AccountId, Ledger)>;
     }
 
     /// This trait is optional to be implemented by any customer deposit contract 
