@@ -58,6 +58,7 @@ pub mod traits {
 pub mod events {
     use super::*;
 
+    /// This event should be emitted for any customer who deposited funds.
     #[ink::event]
     pub struct DdcBalanceDeposited {
         #[ink(topic)]
@@ -67,6 +68,7 @@ pub mod events {
         pub amount: Balance,
     }
 
+    /// This event should be emitted for any customer who initiated unlocking of deposit.
     #[ink::event]
     pub struct DdcBalanceUnlocked {
         #[ink(topic)]
@@ -76,6 +78,7 @@ pub mod events {
         pub amount: Balance,
     }
 
+    /// This event should be emitted for any customer who did withdrawal of unlocked funds.
     #[ink::event]
     pub struct DdcBalanceWithdrawn {
         #[ink(topic)]
@@ -85,6 +88,7 @@ pub mod events {
         pub amount: Balance,
     }
 
+    /// This event should be emitted for any customer who has been charged during payouts.
     #[ink::event]
     pub struct DdcBalanceCharged {
         #[ink(topic)]
