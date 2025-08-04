@@ -7,21 +7,21 @@ use crate::{
     PayoutError, PayoutFingerprintParams, PayoutReceiptParams, PayoutState,
 };
 
-pub trait PayoutCharger<T: frame_system::Config> {
+pub trait CustomerBalanceSource<T: frame_system::Config> {
     fn charge_customers(
         cluster_id: &ClusterId,
         era: PaymentEra,
         vault_id: T::AccountId,
+        charger_id: T::AccountId,
         batch_index: BatchIndex,
         payers: &[(T::AccountId, u128)],
-        charger_id: T::AccountId,
     ) -> Result<u128, DispatchError>;
 }
 
 pub trait PayoutProcessor<T: frame_system::Config> {
 
-    type PayoutCharger: PayoutCharger<T>;
-
+    type CustomerBalanceSource: CustomerBalanceSource<T>;
+    
     #[allow(clippy::too_many_arguments)]
     fn commit_payout_fingerprint(
         validator: T::AccountId,
