@@ -1,13 +1,27 @@
 use frame_system::pallet_prelude::BlockNumberFor;
 use sp_core::H256;
-use sp_runtime::DispatchResult;
+use sp_runtime::{DispatchResult, DispatchError};
 
 use crate::{
     BatchIndex, ClusterId, EhdEra, Fingerprint, MMRProof, PayableUsageHash, PaymentEra,
     PayoutError, PayoutFingerprintParams, PayoutReceiptParams, PayoutState,
 };
 
+pub trait PayoutCharger<T: frame_system::Config> {
+    fn charge_customers(
+        cluster_id: &ClusterId,
+        era: PaymentEra,
+        vault_id: T::AccountId,
+        batch_index: BatchIndex,
+        payers: &[(T::AccountId, u128)],
+        charger_id: T::AccountId,
+    ) -> Result<u128, DispatchError>;
+}
+
 pub trait PayoutProcessor<T: frame_system::Config> {
+
+    type PayoutCharger: PayoutCharger<T>;
+
     #[allow(clippy::too_many_arguments)]
     fn commit_payout_fingerprint(
         validator: T::AccountId,
