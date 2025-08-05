@@ -2,6 +2,7 @@ use sp_runtime::DispatchError;
 
 use crate::{BucketId, ClusterId};
 
+// todo(yahortsaryk): should be refactored to charge a batch of customers in one call
 pub trait CustomerCharger<T: frame_system::Config> {
     fn charge_customer(
         customer: T::AccountId,
