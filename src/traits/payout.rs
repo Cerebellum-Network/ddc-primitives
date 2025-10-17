@@ -1,13 +1,27 @@
 use frame_system::pallet_prelude::BlockNumberFor;
 use sp_core::H256;
-use sp_runtime::DispatchResult;
+use sp_runtime::{DispatchResult, DispatchError};
 
 use crate::{
     BatchIndex, ClusterId, EhdEra, Fingerprint, MMRProof, PayableUsageHash, PaymentEra,
     PayoutError, PayoutFingerprintParams, PayoutReceiptParams, PayoutState,
 };
 
+pub trait CustomerBalanceSource<T: frame_system::Config> {
+    fn charge_customers(
+        cluster_id: &ClusterId,
+        era: PaymentEra,
+        vault_id: T::AccountId,
+        charger_id: T::AccountId,
+        batch_index: BatchIndex,
+        payers: &[(T::AccountId, u128)],
+    ) -> Result<u128, DispatchError>;
+}
+
 pub trait PayoutProcessor<T: frame_system::Config> {
+
+    type CustomerBalanceSource: CustomerBalanceSource<T>;
+    
     #[allow(clippy::too_many_arguments)]
     fn commit_payout_fingerprint(
         validator: T::AccountId,
@@ -82,4 +96,8 @@ pub trait PayoutProcessor<T: frame_system::Config> {
     ) -> Result<(), PayoutError>;
 
     fn create_payout_fingerprint(params: PayoutFingerprintParams<T::AccountId>) -> Fingerprint;
+}
+
+pub trait FeeHandler<AccountId> {
+    fn handle_fee(source: AccountId, fee_amount: u128) -> DispatchResult;
 }

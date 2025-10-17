@@ -26,6 +26,7 @@ sp-core = { version = "37.0.0", default-features = false, features = ["serde"] }
 sp-io = { version = "41.0.1", default-features = false }
 sp-runtime = { version = "42.0.0", default-features = false }
 sp-std = { version = "14.0.0", default-features = false }
+ink = { version = "5.1.0", default-features = false }
 
 [build-dependencies]
 prost-build = "0.13.3"
@@ -44,6 +45,7 @@ std = [
   "sp-std/std",
   "sp-runtime/std",
   "sp-application-crypto/std",
+  "ink/std",
 ]
 runtime-benchmarks = [
   "frame-support/runtime-benchmarks",
