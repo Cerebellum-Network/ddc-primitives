@@ -166,6 +166,13 @@ pub struct AggregatorInfo {
     pub node_params: StorageNodeParams,
 }
 
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
+pub struct InspectionDryRunParams {
+	pub enabled: bool,
+    pub sync_node_key: NodePubKey,
+    pub sync_node_params: StorageNodeParams,
+}
+
 // The `StoragePubKey` is the only variant of DDC node key. This enum should be replaced with
 // trait-bounded type.
 #[derive(
