@@ -103,6 +103,7 @@ pub struct ClusterParams<AccountId> {
     pub erasure_coding_required: u32,
     pub erasure_coding_total: u32,
     pub replication_total: u32,
+    pub inspection_dry_run_params: Option<InspectionDryRunParams>,
 }
 
 #[cfg(feature = "std")]
@@ -113,6 +114,7 @@ impl<AccountId> Default for ClusterParams<AccountId> {
             erasure_coding_required: 0,
             erasure_coding_total: 0,
             replication_total: 0,
+            inspection_dry_run_params: None,
         }
     }
 }
@@ -164,6 +166,13 @@ pub struct ClusterBondingParams<BlockNumber> {
 pub struct AggregatorInfo {
     pub node_pub_key: NodePubKey,
     pub node_params: StorageNodeParams,
+}
+
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Serialize, Deserialize)]
+pub struct InspectionDryRunParams {
+	pub enabled: bool,
+    pub sync_node_key: NodePubKey,
+    pub sync_node_params: StorageNodeParams,
 }
 
 // The `StoragePubKey` is the only variant of DDC node key. This enum should be replaced with
