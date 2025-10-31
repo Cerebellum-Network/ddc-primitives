@@ -4,7 +4,7 @@ use sp_std::prelude::*;
 use crate::{
     ClusterBondingParams, ClusterFeesParams, ClusterId, ClusterNodeKind, ClusterNodeState,
     ClusterNodeStatus, ClusterNodesStats, ClusterParams, ClusterPricingParams,
-    ClusterProtocolParams, ClusterStatus, EhdEra, NodePubKey, NodeType,
+    ClusterProtocolParams, ClusterStatus, EhdEra, NodePubKey, NodeType, InspectionDryRunParams,
 };
 
 pub trait ClusterQuery<AccountId> {
@@ -97,7 +97,10 @@ pub trait ClusterManager<AccountId, BlockNumber>: ClusterQuery<AccountId> {
     ) -> Result<(), DispatchError>;
 
     fn get_clusters(status: ClusterStatus) -> Result<Vec<ClusterId>, DispatchError>;
+
+    fn get_inspection_dry_run_params(cluster_id: &ClusterId) -> Result<Option<InspectionDryRunParams>, DispatchError>;
 }
+
 pub trait ClusterValidator {
     /// Updates the `last_paid_era` for the given cluster and emits an event indicating the
     /// update.
