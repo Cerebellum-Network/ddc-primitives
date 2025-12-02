@@ -131,19 +131,25 @@ pub struct ClusterProtocolParams<Balance, BlockNumber, AccountId> {
     pub storage_bond_size: Balance,
     pub storage_chill_delay: BlockNumber,
     pub storage_unbonding_delay: BlockNumber,
-    pub unit_per_mb_stored: u128,
-    pub unit_per_mb_streamed: u128,
-    pub unit_per_put_request: u128,
-    pub unit_per_get_request: u128,
+    pub cost_per_mb_stored: u128,
+    pub cost_per_mb_streamed: u128,
+    pub cost_per_put_request: u128,
+    pub cost_per_get_request: u128,
+    pub cost_per_gpu_unit: u128,
+    pub cost_per_cpu_unit: u128,
+    pub cost_per_ram_unit: u128,
     pub customer_deposit_contract: AccountId,
 }
 
 #[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
 pub struct ClusterPricingParams {
-    pub unit_per_mb_stored: u128,
-    pub unit_per_mb_streamed: u128,
-    pub unit_per_put_request: u128,
-    pub unit_per_get_request: u128,
+    pub cost_per_mb_stored: u128,
+    pub cost_per_mb_streamed: u128,
+    pub cost_per_put_request: u128,
+    pub cost_per_get_request: u128,
+    pub cost_per_gpu_unit: u128,
+    pub cost_per_cpu_unit: u128,
+    pub cost_per_ram_unit: u128,
 }
 
 #[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
@@ -402,6 +408,8 @@ pub enum StorageNodeMode {
     Storage = 2,
     /// DDC Storage node operates with enabled caching in RAM and doesn't store data in Hard Drive
     Cache = 3,
+    /// Compute Node operates with CPU, GPU and RAM resources only
+    Compute = 4
 }
 
 #[derive(
@@ -509,6 +517,7 @@ pub struct BucketUsage {
     pub stored_bytes: i64,
     pub number_of_puts: u64,
     pub number_of_gets: u64,
+    pub number_of_compute: u64,
 }
 
 impl BucketUsage {
@@ -517,6 +526,7 @@ impl BucketUsage {
         self.stored_bytes += other.stored_bytes;
         self.number_of_puts += other.number_of_puts;
         self.number_of_gets += other.number_of_gets;
+        self.number_of_compute += other.number_of_compute;
     }
 }
 
@@ -527,6 +537,7 @@ pub struct CustomerCharge {
     pub storage: u128,  // charge in tokens for BucketUsage::stored_bytes
     pub puts: u128,     // charge in tokens for BucketUsage::number_of_puts
     pub gets: u128,     // charge in tokens for BucketUsage::number_of_gets
+    pub compute: u128   // charge in tokens for BucketUsage::compute
 }
 
 /// Stores usage of a node
@@ -550,6 +561,7 @@ pub struct NodeUsage {
     pub stored_bytes: i64,
     pub number_of_puts: u64,
     pub number_of_gets: u64,
+    pub number_of_compute: u64
 }
 
 impl NodeUsage {
@@ -558,6 +570,7 @@ impl NodeUsage {
         self.stored_bytes += other.stored_bytes;
         self.number_of_puts += other.number_of_puts;
         self.number_of_gets += other.number_of_gets;
+        self.number_of_compute += other.number_of_compute;
     }
 }
 
@@ -568,6 +581,7 @@ pub struct ProviderReward {
     pub storage: u128,  // reward in tokens for NodeUsage::stored_bytes
     pub puts: u128,     // reward in tokens for NodeUsage::number_of_puts
     pub gets: u128,     // reward in tokens for NodeUsage::number_of_gets
+    pub compute: u128   // reward in tokens for NodeUsage::compute
 }
 
 #[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Default)]
