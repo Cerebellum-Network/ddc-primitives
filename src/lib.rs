@@ -517,7 +517,9 @@ pub struct BucketUsage {
     pub stored_bytes: i64,
     pub number_of_puts: u64,
     pub number_of_gets: u64,
-    pub number_of_compute: u64,
+    pub cpu_units: u64,
+    pub gpu_units: u64,
+    pub ram_units: u64
 }
 
 impl BucketUsage {
@@ -526,7 +528,9 @@ impl BucketUsage {
         self.stored_bytes += other.stored_bytes;
         self.number_of_puts += other.number_of_puts;
         self.number_of_gets += other.number_of_gets;
-        self.number_of_compute += other.number_of_compute;
+        self.cpu_units += other.cpu_units;
+        self.gpu_units += other.gpu_units;
+        self.ram_units += other.ram_units;
     }
 }
 
@@ -561,7 +565,9 @@ pub struct NodeUsage {
     pub stored_bytes: i64,
     pub number_of_puts: u64,
     pub number_of_gets: u64,
-    pub number_of_compute: u64
+    pub cpu_units: u64,
+    pub gpu_units: u64,
+    pub ram_units: u64
 }
 
 impl NodeUsage {
@@ -570,7 +576,9 @@ impl NodeUsage {
         self.stored_bytes += other.stored_bytes;
         self.number_of_puts += other.number_of_puts;
         self.number_of_gets += other.number_of_gets;
-        self.number_of_compute += other.number_of_compute;
+        self.cpu_units += other.cpu_units;
+        self.gpu_units += other.gpu_units;
+        self.ram_units += other.ram_units;
     }
 }
 
