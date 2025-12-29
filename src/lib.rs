@@ -490,38 +490,6 @@ pub struct ClusterNodesStats {
     pub validation_failed: ClusterNodesCount,
 }
 
-/// Stores usage of a bucket
-#[derive(
-    PartialEq,
-    Eq,
-    Encode,
-    Decode,
-    DecodeWithMemTracking,
-    Debug,
-    TypeInfo,
-    Default,
-    Clone,
-    Serialize,
-    Deserialize,
-    PartialOrd,
-    Ord,
-)]
-pub struct BucketUsage {
-    pub transferred_bytes: u64,
-    pub stored_bytes: i64,
-    pub number_of_puts: u64,
-    pub number_of_gets: u64,
-}
-
-impl BucketUsage {
-    pub fn add(&mut self, other: &BucketUsage) {
-        self.transferred_bytes += other.transferred_bytes;
-        self.stored_bytes += other.stored_bytes;
-        self.number_of_puts += other.number_of_puts;
-        self.number_of_gets += other.number_of_gets;
-    }
-}
-
 /// Stores charge in tokens(units) of customer as per BucketUsage
 #[derive(PartialEq, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, Default, Clone)]
 pub struct CustomerCharge {
@@ -529,38 +497,6 @@ pub struct CustomerCharge {
     pub storage: u128,  // charge in tokens for BucketUsage::stored_bytes
     pub puts: u128,     // charge in tokens for BucketUsage::number_of_puts
     pub gets: u128,     // charge in tokens for BucketUsage::number_of_gets
-}
-
-/// Stores usage of a node
-#[derive(
-    PartialEq,
-    Eq,
-    Encode,
-    Decode,
-    DecodeWithMemTracking,
-    Debug,
-    TypeInfo,
-    Default,
-    Clone,
-    Serialize,
-    Deserialize,
-    PartialOrd,
-    Ord,
-)]
-pub struct NodeUsage {
-    pub transferred_bytes: u64,
-    pub stored_bytes: i64,
-    pub number_of_puts: u64,
-    pub number_of_gets: u64,
-}
-
-impl NodeUsage {
-    pub fn add(&mut self, other: &NodeUsage) {
-        self.transferred_bytes += other.transferred_bytes;
-        self.stored_bytes += other.stored_bytes;
-        self.number_of_puts += other.number_of_puts;
-        self.number_of_gets += other.number_of_gets;
-    }
 }
 
 /// Stores reward in tokens(units) of node provider as per NodeUsage
