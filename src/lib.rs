@@ -409,7 +409,7 @@ pub enum StorageNodeMode {
     /// DDC Storage node operates with enabled caching in RAM and doesn't store data in Hard Drive
     Cache = 3,
     /// Compute Node operates with CPU, GPU and RAM resources only
-    Compute = 4
+    Compute = 4,
 }
 
 #[derive(
