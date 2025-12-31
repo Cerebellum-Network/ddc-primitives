@@ -496,104 +496,24 @@ pub struct ClusterNodesStats {
     pub validation_failed: ClusterNodesCount,
 }
 
-/// Stores usage of a bucket
-#[derive(
-    PartialEq,
-    Eq,
-    Encode,
-    Decode,
-    DecodeWithMemTracking,
-    Debug,
-    TypeInfo,
-    Default,
-    Clone,
-    Serialize,
-    Deserialize,
-    PartialOrd,
-    Ord,
-)]
-pub struct BucketUsage {
-    pub transferred_bytes: u64,
-    pub stored_bytes: i64,
-    pub number_of_puts: u64,
-    pub number_of_gets: u64,
-    pub number_of_computes: u64,
-    pub cpu_units: u64,
-    pub gpu_units: u64,
-    pub ram_units: u64
-}
-
-impl BucketUsage {
-    pub fn add(&mut self, other: &BucketUsage) {
-        self.transferred_bytes += other.transferred_bytes;
-        self.stored_bytes += other.stored_bytes;
-        self.number_of_puts += other.number_of_puts;
-        self.number_of_gets += other.number_of_gets;
-        self.number_of_computes += other.number_of_computes;
-        self.cpu_units += other.cpu_units;
-        self.gpu_units += other.gpu_units;
-        self.ram_units += other.ram_units;
-    }
-}
-
-/// Stores charge in tokens(units) of customer as per BucketUsage
+/// Stores charge in tokens(units) of customer
 #[derive(PartialEq, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, Default, Clone)]
 pub struct CustomerCharge {
-    pub transfer: u128, // charge in tokens for BucketUsage::transferred_bytes
-    pub storage: u128,  // charge in tokens for BucketUsage::stored_bytes
-    pub puts: u128,     // charge in tokens for BucketUsage::number_of_puts
-    pub gets: u128,     // charge in tokens for BucketUsage::number_of_gets
-    pub compute: u128   // charge in tokens for BucketUsage::compute
+    pub transfer: u128, // charge in tokens for transferred bytes
+    pub storage: u128,  // charge in tokens for stored bytes
+    pub puts: u128,     // charge in tokens for number of puts
+    pub gets: u128,     // charge in tokens for number of gets
+    pub compute: u128   // charge in tokens for compute
 }
 
-/// Stores usage of a node
-#[derive(
-    PartialEq,
-    Eq,
-    Encode,
-    Decode,
-    DecodeWithMemTracking,
-    Debug,
-    TypeInfo,
-    Default,
-    Clone,
-    Serialize,
-    Deserialize,
-    PartialOrd,
-    Ord,
-)]
-pub struct NodeUsage {
-    pub transferred_bytes: u64,
-    pub stored_bytes: i64,
-    pub number_of_puts: u64,
-    pub number_of_gets: u64,
-    pub number_of_computes: u64,
-    pub cpu_units: u64,
-    pub gpu_units: u64,
-    pub ram_units: u64
-}
-
-impl NodeUsage {
-    pub fn add(&mut self, other: &NodeUsage) {
-        self.transferred_bytes += other.transferred_bytes;
-        self.stored_bytes += other.stored_bytes;
-        self.number_of_puts += other.number_of_puts;
-        self.number_of_gets += other.number_of_gets;
-        self.number_of_computes += other.number_of_computes;
-        self.cpu_units += other.cpu_units;
-        self.gpu_units += other.gpu_units;
-        self.ram_units += other.ram_units;
-    }
-}
-
-/// Stores reward in tokens(units) of node provider as per NodeUsage
+/// Stores reward in tokens(units) of node provider
 #[derive(PartialEq, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, Default, Clone)]
 pub struct ProviderReward {
-    pub transfer: u128, // reward in tokens for NodeUsage::transferred_bytes
-    pub storage: u128,  // reward in tokens for NodeUsage::stored_bytes
-    pub puts: u128,     // reward in tokens for NodeUsage::number_of_puts
-    pub gets: u128,     // reward in tokens for NodeUsage::number_of_gets
-    pub compute: u128   // reward in tokens for NodeUsage::compute
+    pub transfer: u128, // reward in tokens for transferred bytes
+    pub storage: u128,  // reward in tokens for stored bytes
+    pub puts: u128,     // reward in tokens for number of puts
+    pub gets: u128,     // reward in tokens for number of gets
+    pub compute: u128   // reward in tokens for compute
 }
 
 #[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Default)]
