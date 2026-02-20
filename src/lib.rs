@@ -220,6 +220,44 @@ impl TryFrom<String> for NodePubKey {
     }
 }
 
+impl TryFrom<&[u8]> for NodePubKey {
+    type Error = &'static str;
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        if bytes.len() != 32 {
+            return Err("NodePubKey must be exactly 32 bytes");
+        }
+        let mut arr = [0u8; 32];
+        arr.copy_from_slice(bytes);
+        Ok(NodePubKey::StoragePubKey(AccountId32::new(arr)))
+    }
+}
+
+impl TryFrom<Vec<u8>> for NodePubKey {
+    type Error = &'static str;
+    fn try_from(bytes: Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(bytes.as_slice())
+    }
+}
+
+impl From<NodePubKey> for Vec<u8> {
+    fn from(node_key: NodePubKey) -> Self {
+        match node_key {
+            NodePubKey::StoragePubKey(account_id) => {
+                let bytes: &[u8] = account_id.as_ref();
+                bytes.to_vec()
+            }
+        }
+    }
+}
+
+impl AsRef<[u8]> for NodePubKey {
+    fn as_ref(&self) -> &[u8] {
+        match self {
+            NodePubKey::StoragePubKey(account_id) => account_id.as_ref(),
+        }
+    }
+}
+
 #[derive(Clone, PartialOrd, Serialize, Deserialize, Ord, Eq, PartialEq, Encode, Decode, DecodeWithMemTracking, Debug)]
 pub struct EHDId(pub ClusterId, pub NodePubKey, pub EhdEra);
 
@@ -313,6 +351,7 @@ impl TryFrom<&str> for PHDId {
         PHDId::try_from(String::from(value))
     }
 }
+
 
 #[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
 pub enum NodeType {
