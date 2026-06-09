@@ -1,8 +1,8 @@
-use frame_system::Config;
+use polkadot_sdk::frame_system::Config;
 use scale_info::prelude::vec::Vec;
 #[cfg(feature = "runtime-benchmarks")]
-use sp_runtime::DispatchError;
-use sp_runtime::Percent;
+use polkadot_sdk::sp_runtime::DispatchError;
+use polkadot_sdk::sp_runtime::Percent;
 
 pub trait InspectorAuthority<T: Config> {
     fn is_inspector(caller: T::AccountId) -> bool;

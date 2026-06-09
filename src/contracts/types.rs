@@ -1,4 +1,4 @@
-use sp_runtime::AccountId32;
+use polkadot_sdk::sp_runtime::AccountId32;
 
 /// Cluster ID type used accross contracts extensions 
 pub type ClusterId = [u8; 20];

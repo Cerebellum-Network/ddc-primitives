@@ -1,13 +1,13 @@
-use frame_system::pallet_prelude::BlockNumberFor;
-use sp_core::H256;
-use sp_runtime::{DispatchResult, DispatchError};
+use polkadot_sdk::frame_system::pallet_prelude::BlockNumberFor;
+use polkadot_sdk::sp_core::H256;
+use polkadot_sdk::sp_runtime::{DispatchResult, DispatchError};
 
 use crate::{
     BatchIndex, ClusterId, EhdEra, Fingerprint, MMRProof, PayableUsageHash, PaymentEra,
     PayoutError, PayoutFingerprintParams, PayoutReceiptParams, PayoutState,
 };
 
-pub trait CustomerBalanceSource<T: frame_system::Config> {
+pub trait CustomerBalanceSource<T: polkadot_sdk::frame_system::Config> {
     fn charge_customers(
         cluster_id: &ClusterId,
         era: PaymentEra,
@@ -18,7 +18,7 @@ pub trait CustomerBalanceSource<T: frame_system::Config> {
     ) -> Result<u128, DispatchError>;
 }
 
-pub trait PayoutProcessor<T: frame_system::Config> {
+pub trait PayoutProcessor<T: polkadot_sdk::frame_system::Config> {
 
     type CustomerBalanceSource: CustomerBalanceSource<T>;
     

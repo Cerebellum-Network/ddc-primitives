@@ -2,23 +2,23 @@
 
 use blake2::{Blake2s256, Digest};
 use codec::{Decode, Encode};
-use frame_support::parameter_types;
+use polkadot_sdk::frame_support::parameter_types;
 use polkadot_ckb_merkle_mountain_range::Merge;
 use scale_info::{
     prelude::{format, string::String, vec::Vec},
     TypeInfo,
 };
 use serde::{Deserialize, Serialize};
-use sp_core::{crypto::KeyTypeId, hash::H160, H256, DecodeWithMemTracking};
-use sp_runtime::{
+use polkadot_sdk::sp_core::{crypto::KeyTypeId, hash::H160, H256, DecodeWithMemTracking};
+use polkadot_sdk::sp_runtime::{
     generic,
     traits::{BlakeTwo256, IdentifyAccount, Verify},
     AccountId32, MultiSignature, OpaqueExtrinsic, Perquintill, RuntimeDebug,
 };
-use sp_std::collections::btree_set::BTreeSet;
+use polkadot_sdk::sp_std::collections::btree_set::BTreeSet;
 pub mod traits;
 pub mod contracts;
-use sp_std::str::FromStr;
+use polkadot_sdk::sp_std::str::FromStr;
 pub mod ocw_mutex;
 
 parameter_types! {
@@ -42,7 +42,7 @@ pub type Moment = u64;
 /// Index of a transaction in the chain.
 pub type Nonce = u32;
 /// A hash of some data used by the chain.
-pub type Hash = sp_core::H256;
+pub type Hash = polkadot_sdk::sp_core::H256;
 /// A timestamp: milliseconds since the unix epoch.
 /// `u64` is enough to represent a duration of half a billion years, when the
 /// time scale is milliseconds.
@@ -498,14 +498,14 @@ pub const DAC_VERIFICATION_KEY_TYPE: KeyTypeId = KeyTypeId(*b"cer!");
 
 pub mod sr25519 {
     mod app_sr25519 {
-        use sp_application_crypto::{app_crypto, sr25519};
+        use polkadot_sdk::sp_application_crypto::{app_crypto, sr25519};
 
         use crate::DAC_VERIFICATION_KEY_TYPE;
 
         app_crypto!(sr25519, DAC_VERIFICATION_KEY_TYPE);
     }
 
-    sp_application_crypto::with_pair! {
+    polkadot_sdk::sp_application_crypto::with_pair! {
         pub type AuthorityPair = app_sr25519::Pair;
     }
     pub type AuthoritySignature = app_sr25519::Signature;
@@ -513,8 +513,8 @@ pub mod sr25519 {
 }
 
 pub mod crypto {
-    use sp_core::sr25519::Signature as Sr25519Signature;
-    use sp_runtime::{
+    use polkadot_sdk::sp_core::sr25519::Signature as Sr25519Signature;
+    use polkadot_sdk::sp_runtime::{
         app_crypto::{app_crypto, sr25519},
         traits::Verify,
         MultiSignature, MultiSigner,
@@ -524,19 +524,19 @@ pub mod crypto {
 
     app_crypto!(sr25519, DAC_VERIFICATION_KEY_TYPE);
     pub struct OffchainIdentifierId;
-    impl frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for OffchainIdentifierId {
+    impl polkadot_sdk::frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for OffchainIdentifierId {
         type RuntimeAppPublic = Public;
-        type GenericSignature = sp_core::sr25519::Signature;
-        type GenericPublic = sp_core::sr25519::Public;
+        type GenericSignature = polkadot_sdk::sp_core::sr25519::Signature;
+        type GenericPublic = polkadot_sdk::sp_core::sr25519::Public;
     }
 
     // implemented for mock runtime in test
-    impl frame_system::offchain::AppCrypto<<Sr25519Signature as Verify>::Signer, Sr25519Signature>
+    impl polkadot_sdk::frame_system::offchain::AppCrypto<<Sr25519Signature as Verify>::Signer, Sr25519Signature>
         for OffchainIdentifierId
     {
         type RuntimeAppPublic = Public;
-        type GenericSignature = sp_core::sr25519::Signature;
-        type GenericPublic = sp_core::sr25519::Public;
+        type GenericSignature = polkadot_sdk::sp_core::sr25519::Signature;
+        type GenericPublic = polkadot_sdk::sp_core::sr25519::Public;
     }
 }
 
