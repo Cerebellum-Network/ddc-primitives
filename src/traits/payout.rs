@@ -1,103 +1,102 @@
 use polkadot_sdk::frame_system::pallet_prelude::BlockNumberFor;
 use polkadot_sdk::sp_core::H256;
-use polkadot_sdk::sp_runtime::{DispatchResult, DispatchError};
+use polkadot_sdk::sp_runtime::{DispatchError, DispatchResult};
 
 use crate::{
-    BatchIndex, ClusterId, EhdEra, Fingerprint, MMRProof, PayableUsageHash, PaymentEra,
-    PayoutError, PayoutFingerprintParams, PayoutReceiptParams, PayoutState,
+	BatchIndex, ClusterId, EhdEra, Fingerprint, MMRProof, PayableUsageHash, PaymentEra,
+	PayoutError, PayoutFingerprintParams, PayoutReceiptParams, PayoutState,
 };
 
 pub trait CustomerBalanceSource<T: polkadot_sdk::frame_system::Config> {
-    fn charge_customers(
-        cluster_id: &ClusterId,
-        era: PaymentEra,
-        vault_id: T::AccountId,
-        charger_id: T::AccountId,
-        batch_index: BatchIndex,
-        payers: &[(T::AccountId, u128)],
-    ) -> Result<u128, DispatchError>;
+	fn charge_customers(
+		cluster_id: &ClusterId,
+		era: PaymentEra,
+		vault_id: T::AccountId,
+		charger_id: T::AccountId,
+		batch_index: BatchIndex,
+		payers: &[(T::AccountId, u128)],
+	) -> Result<u128, DispatchError>;
 }
 
 pub trait PayoutProcessor<T: polkadot_sdk::frame_system::Config> {
+	type CustomerBalanceSource: CustomerBalanceSource<T>;
 
-    type CustomerBalanceSource: CustomerBalanceSource<T>;
-    
-    #[allow(clippy::too_many_arguments)]
-    fn commit_payout_fingerprint(
-        validator: T::AccountId,
-        cluster_id: ClusterId,
-        era_id: EhdEra,
-        insp_hash: H256,
-        ehd_merkle_root: H256,
-        payers_merkle_root: PayableUsageHash,
-        payees_merkle_root: PayableUsageHash,
-    ) -> DispatchResult;
+	#[allow(clippy::too_many_arguments)]
+	fn commit_payout_fingerprint(
+		validator: T::AccountId,
+		cluster_id: ClusterId,
+		era_id: EhdEra,
+		insp_hash: H256,
+		ehd_merkle_root: H256,
+		payers_merkle_root: PayableUsageHash,
+		payees_merkle_root: PayableUsageHash,
+	) -> DispatchResult;
 
-    fn begin_payout(
-        cluster_id: ClusterId,
-        era_id: PaymentEra,
-        fingerprint: Fingerprint,
-    ) -> DispatchResult;
+	fn begin_payout(
+		cluster_id: ClusterId,
+		era_id: PaymentEra,
+		fingerprint: Fingerprint,
+	) -> DispatchResult;
 
-    fn begin_charging_customers(
-        cluster_id: ClusterId,
-        era_id: PaymentEra,
-        max_batch_index: BatchIndex,
-    ) -> DispatchResult;
+	fn begin_charging_customers(
+		cluster_id: ClusterId,
+		era_id: PaymentEra,
+		max_batch_index: BatchIndex,
+	) -> DispatchResult;
 
-    fn send_charging_customers_batch(
-        cluster_id: ClusterId,
-        era_id: PaymentEra,
-        batch_index: BatchIndex,
-        payers: &[(T::AccountId, u128)],
-        batch_proof: MMRProof,
-    ) -> DispatchResult;
+	fn send_charging_customers_batch(
+		cluster_id: ClusterId,
+		era_id: PaymentEra,
+		batch_index: BatchIndex,
+		payers: &[(T::AccountId, u128)],
+		batch_proof: MMRProof,
+	) -> DispatchResult;
 
-    fn end_charging_customers(cluster_id: ClusterId, era: PaymentEra) -> DispatchResult;
+	fn end_charging_customers(cluster_id: ClusterId, era: PaymentEra) -> DispatchResult;
 
-    fn begin_rewarding_providers(
-        cluster_id: ClusterId,
-        era_id: PaymentEra,
-        max_batch_index: BatchIndex,
-    ) -> DispatchResult;
+	fn begin_rewarding_providers(
+		cluster_id: ClusterId,
+		era_id: PaymentEra,
+		max_batch_index: BatchIndex,
+	) -> DispatchResult;
 
-    fn send_rewarding_providers_batch(
-        cluster_id: ClusterId,
-        era_id: PaymentEra,
-        batch_index: BatchIndex,
-        payees: &[(T::AccountId, u128)],
-        batch_proof: MMRProof,
-    ) -> DispatchResult;
+	fn send_rewarding_providers_batch(
+		cluster_id: ClusterId,
+		era_id: PaymentEra,
+		batch_index: BatchIndex,
+		payees: &[(T::AccountId, u128)],
+		batch_proof: MMRProof,
+	) -> DispatchResult;
 
-    fn end_rewarding_providers(cluster_id: ClusterId, era_id: PaymentEra) -> DispatchResult;
+	fn end_rewarding_providers(cluster_id: ClusterId, era_id: PaymentEra) -> DispatchResult;
 
-    fn end_payout(cluster_id: ClusterId, era_id: PaymentEra) -> DispatchResult;
+	fn end_payout(cluster_id: ClusterId, era_id: PaymentEra) -> DispatchResult;
 
-    fn get_payout_state(cluster_id: &ClusterId, era_id: PaymentEra) -> PayoutState;
+	fn get_payout_state(cluster_id: &ClusterId, era_id: PaymentEra) -> PayoutState;
 
-    fn is_customers_charging_finished(cluster_id: &ClusterId, era_id: PaymentEra) -> bool;
+	fn is_customers_charging_finished(cluster_id: &ClusterId, era_id: PaymentEra) -> bool;
 
-    fn is_providers_rewarding_finished(cluster_id: &ClusterId, era_id: PaymentEra) -> bool;
+	fn is_providers_rewarding_finished(cluster_id: &ClusterId, era_id: PaymentEra) -> bool;
 
-    fn get_next_customers_batch(
-        cluster_id: &ClusterId,
-        era_id: PaymentEra,
-    ) -> Result<Option<BatchIndex>, PayoutError>;
+	fn get_next_customers_batch(
+		cluster_id: &ClusterId,
+		era_id: PaymentEra,
+	) -> Result<Option<BatchIndex>, PayoutError>;
 
-    fn get_next_providers_batch(
-        cluster_id: &ClusterId,
-        era_id: PaymentEra,
-    ) -> Result<Option<BatchIndex>, PayoutError>;
+	fn get_next_providers_batch(
+		cluster_id: &ClusterId,
+		era_id: PaymentEra,
+	) -> Result<Option<BatchIndex>, PayoutError>;
 
-    fn create_payout_receipt(
-        vault: T::AccountId,
-        params: PayoutReceiptParams,
-        finalized_at: Option<BlockNumberFor<T>>,
-    ) -> Result<(), PayoutError>;
+	fn create_payout_receipt(
+		vault: T::AccountId,
+		params: PayoutReceiptParams,
+		finalized_at: Option<BlockNumberFor<T>>,
+	) -> Result<(), PayoutError>;
 
-    fn create_payout_fingerprint(params: PayoutFingerprintParams<T::AccountId>) -> Fingerprint;
+	fn create_payout_fingerprint(params: PayoutFingerprintParams<T::AccountId>) -> Fingerprint;
 }
 
 pub trait FeeHandler<AccountId> {
-    fn handle_fee(source: AccountId, fee_amount: u128) -> DispatchResult;
+	fn handle_fee(source: AccountId, fee_amount: u128) -> DispatchResult;
 }
