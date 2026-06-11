@@ -1,6 +1,6 @@
 [package]
 name = "ddc-primitives"
-version = "7.3.2"
+version = "7.3.3"
 authors = ["Cerebellum-Network"]
 edition = "2021"
 homepage = "https://cere.network/"
