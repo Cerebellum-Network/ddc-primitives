@@ -1,18 +1,18 @@
-use frame_system::Config;
-use scale_info::prelude::vec::Vec;
+use polkadot_sdk::frame_system::Config;
 #[cfg(feature = "runtime-benchmarks")]
-use sp_runtime::DispatchError;
-use sp_runtime::Percent;
+use polkadot_sdk::sp_runtime::DispatchError;
+use polkadot_sdk::sp_runtime::Percent;
+use scale_info::prelude::vec::Vec;
 
 pub trait InspectorAuthority<T: Config> {
-    fn is_inspector(caller: T::AccountId) -> bool;
-    fn is_quorum_reached(quorum: Percent, members_count: usize) -> bool;
+	fn is_inspector(caller: T::AccountId) -> bool;
+	fn is_quorum_reached(quorum: Percent, members_count: usize) -> bool;
 
-    #[cfg(feature = "runtime-benchmarks")]
-    fn add_inspector(valdator: T::AccountId) -> Result<(), DispatchError>;
+	#[cfg(feature = "runtime-benchmarks")]
+	fn add_inspector(valdator: T::AccountId) -> Result<(), DispatchError>;
 }
 
 pub trait InspReceiptsInterceptor {
-    type Receipt;
-    fn intercept(receipts: Vec<Self::Receipt>) -> Vec<Self::Receipt>;
+	type Receipt;
+	fn intercept(receipts: Vec<Self::Receipt>) -> Vec<Self::Receipt>;
 }
