@@ -1,16 +1,15 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-use ink::prelude::vec::Vec;
-use crate::contracts::{ClusterId, AccountId, Balance};
+use crate::contracts::{AccountId, Balance, ClusterId};
 use crate::BlockNumber;
-
+use ink::prelude::vec::Vec;
 
 pub mod traits {
-    use super::*;
-    use super::types::Ledger;
     use super::errors::Error;
+    use super::types::Ledger;
+    use super::*;
 
-    /// This trait is required to be implemented by any customer deposit contract 
+    /// This trait is required to be implemented by any customer deposit contract
     /// as it enables fetching of customer balances in DDC cluster required by the protocol.
     #[ink::trait_definition]
     pub trait DdcBalancesFetcher {
@@ -23,7 +22,7 @@ pub mod traits {
         fn get_balances(&self, last_index: u64, limit: u64) -> Vec<Ledger>;
     }
 
-    /// This trait is optional to be implemented by any customer deposit contract 
+    /// This trait is optional to be implemented by any customer deposit contract
     /// as it enables utilities (i.e. wallet, payment gateway, ramp service, etc.) that are not required by the protocol.
     #[ink::trait_definition]
     pub trait DdcBalancesDepositor {
@@ -33,18 +32,18 @@ pub mod traits {
 
         /// Top up deposit balance for specific owner on behalf faucet.
         #[ink(message, payable)]
-		fn deposit_for(&mut self, owner: AccountId) -> Result<(), Error>;
+        fn deposit_for(&mut self, owner: AccountId) -> Result<(), Error>;
 
         /// Initiate unlocking of deposit balance on behalf its owner.
         #[ink(message)]
-		fn unlock_deposit(&mut self, value: Balance) -> Result<(), Error>;
+        fn unlock_deposit(&mut self, value: Balance) -> Result<(), Error>;
 
         /// Withdraw unlocked deposit balance on behalf its owner.
         #[ink(message)]
-		fn withdraw_unlocked(&mut self) -> Result<(), Error>;
+        fn withdraw_unlocked(&mut self) -> Result<(), Error>;
     }
 
-    /// This trait is required to be implemented by any customer deposit contract 
+    /// This trait is required to be implemented by any customer deposit contract
     /// as it enables charges for DDC service required by the protocol.
     #[ink::trait_definition]
     pub trait DdcPayoutsPayer {
@@ -57,7 +56,6 @@ pub mod traits {
         ) -> Vec<(AccountId, Balance)>;
     }
 }
-
 
 pub mod events {
     use super::*;
@@ -104,7 +102,6 @@ pub mod events {
     }
 }
 
-
 pub mod types {
     use super::*;
 
@@ -126,7 +123,7 @@ pub mod types {
         /// pushed on the back.
         pub unlocking: Vec<UnlockChunk>,
     }
-    
+
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[ink::scale_derive(Encode, Decode, TypeInfo)]
     pub struct UnlockChunk {

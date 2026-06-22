@@ -1,9 +1,9 @@
 use codec::Encode;
-pub use sp_io::offchain::{
+pub use polkadot_sdk::sp_io::offchain::{
     local_storage_clear, local_storage_compare_and_set, local_storage_get, local_storage_set,
 };
-use sp_runtime::offchain::StorageKind;
-use sp_std::prelude::Vec;
+use polkadot_sdk::sp_runtime::offchain::StorageKind;
+use polkadot_sdk::sp_std::prelude::Vec;
 
 pub const LOCKED_VALUE: &[u8] = &[1];
 pub const PREFIX: &[u8] = b"ocwmu";

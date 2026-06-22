@@ -1,9 +1,9 @@
-use sp_runtime::DispatchError;
+use polkadot_sdk::sp_runtime::DispatchError;
 
 use crate::{BucketId, ClusterId};
 
 // todo(yahortsaryk): should be refactored to charge a batch of customers in one call
-pub trait CustomerCharger<T: frame_system::Config> {
+pub trait CustomerCharger<T: polkadot_sdk::frame_system::Config> {
     fn charge_customer(
         customer: T::AccountId,
         payout_vault: T::AccountId,
@@ -12,7 +12,7 @@ pub trait CustomerCharger<T: frame_system::Config> {
     ) -> Result<u128, DispatchError>;
 }
 
-pub trait CustomerDepositor<T: frame_system::Config> {
+pub trait CustomerDepositor<T: polkadot_sdk::frame_system::Config> {
     fn deposit(
         customer: T::AccountId,
         cluster_id: ClusterId,
@@ -33,6 +33,6 @@ pub trait CustomerDepositor<T: frame_system::Config> {
     ) -> Result<(), DispatchError>;
 }
 
-pub trait CustomerVisitor<T: frame_system::Config> {
+pub trait CustomerVisitor<T: polkadot_sdk::frame_system::Config> {
     fn get_bucket_owner(bucket_id: &BucketId) -> Result<T::AccountId, DispatchError>;
 }
