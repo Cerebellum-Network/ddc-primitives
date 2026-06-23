@@ -1,10 +1,10 @@
-use sp_runtime::{DispatchError, DispatchResult};
-use sp_std::prelude::*;
+use polkadot_sdk::sp_runtime::{DispatchError, DispatchResult};
+use polkadot_sdk::sp_std::prelude::*;
 
 use crate::{
     ClusterBondingParams, ClusterFeesParams, ClusterId, ClusterNodeKind, ClusterNodeState,
     ClusterNodeStatus, ClusterNodesStats, ClusterParams, ClusterPricingParams,
-    ClusterProtocolParams, ClusterStatus, EhdEra, NodePubKey, NodeType, InspectionDryRunParams,
+    ClusterProtocolParams, ClusterStatus, EhdEra, InspectionDryRunParams, NodePubKey, NodeType,
 };
 
 pub trait ClusterQuery<AccountId> {
@@ -98,7 +98,9 @@ pub trait ClusterManager<AccountId, BlockNumber>: ClusterQuery<AccountId> {
 
     fn get_clusters(status: ClusterStatus) -> Result<Vec<ClusterId>, DispatchError>;
 
-    fn get_inspection_dry_run_params(cluster_id: &ClusterId) -> Result<Option<InspectionDryRunParams>, DispatchError>;
+    fn get_inspection_dry_run_params(
+        cluster_id: &ClusterId,
+    ) -> Result<Option<InspectionDryRunParams>, DispatchError>;
 }
 
 pub trait ClusterValidator {
