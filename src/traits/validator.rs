@@ -1,6 +1,18 @@
-use frame_system::Config;
-use sp_std::prelude::*;
+use polkadot_sdk::frame_system::Config;
+#[cfg(feature = "runtime-benchmarks")]
+use polkadot_sdk::sp_runtime::DispatchError;
+use polkadot_sdk::sp_runtime::Percent;
+use scale_info::prelude::vec::Vec;
 
-pub trait ValidatorVisitor<T: Config> {
-	fn get_active_validators() -> Vec<T::AccountId>;
+pub trait InspectorAuthority<T: Config> {
+    fn is_inspector(caller: T::AccountId) -> bool;
+    fn is_quorum_reached(quorum: Percent, members_count: usize) -> bool;
+
+    #[cfg(feature = "runtime-benchmarks")]
+    fn add_inspector(valdator: T::AccountId) -> Result<(), DispatchError>;
+}
+
+pub trait InspReceiptsInterceptor {
+    type Receipt;
+    fn intercept(receipts: Vec<Self::Receipt>) -> Vec<Self::Receipt>;
 }
