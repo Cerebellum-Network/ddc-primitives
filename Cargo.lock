@@ -4011,7 +4011,7 @@ dependencies = [
 
 [[package]]
 name = "ddc-primitives"
-version = "7.3.3"
+version = "7.3.4"
 dependencies = [
  "blake2 0.10.6",
  "hex",
