@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 pub mod contracts;
 pub mod traits;
 use polkadot_sdk::sp_std::str::FromStr;
-pub mod ocw_mutex;
+pub mod ocw_cluster_queue;
 
 parameter_types! {
 	pub MaxHostLen: u8 = 255;
