@@ -3,8 +3,8 @@ use polkadot_sdk::sp_core::H256;
 use polkadot_sdk::sp_runtime::{DispatchError, DispatchResult};
 
 use crate::{
-	BatchIndex, ClusterId, EhdEra, Fingerprint, MMRProof, PayableUsageHash, PaymentEra,
-	PayoutError, PayoutFingerprintParams, PayoutReceiptParams, PayoutState,
+	BatchIndex, ClusterId, EhdEra, Fingerprint, InspReceiptCid, MMRProof, PayableUsageHash,
+	PaymentEra, PayoutError, PayoutFingerprintParams, PayoutReceiptParams, PayoutState,
 };
 
 pub trait CustomerBalanceSource<T: polkadot_sdk::frame_system::Config> {
@@ -26,7 +26,7 @@ pub trait PayoutProcessor<T: polkadot_sdk::frame_system::Config> {
 		validator: T::AccountId,
 		cluster_id: ClusterId,
 		era_id: EhdEra,
-		insp_hash: H256,
+		insp_receipt_cid: InspReceiptCid,
 		ehd_merkle_root: H256,
 		payers_merkle_root: PayableUsageHash,
 		payees_merkle_root: PayableUsageHash,
