@@ -72,8 +72,12 @@ pub type DeltaUsageHash = H256;
 pub type PayableUsageHash = H256;
 /// Selective hash of sensitive information for payouts.
 pub type Fingerprint = H256;
+/// Length of a CID of a raw DDC piece: the 4-byte prefix and a 32-byte BLAKE3 digest.
+pub const CERE_RAW_CID_LEN: usize = 36;
 /// CID of an inspection receipt stored in DDC as a raw piece.
-pub type InspReceiptCid = [u8; 36];
+pub type InspReceiptCid = [u8; CERE_RAW_CID_LEN];
+/// CID of an era's EHD document stored in DDC as a raw piece.
+pub type EhdCid = [u8; CERE_RAW_CID_LEN];
 /// CIDv1 prefix of a raw DDC piece: version 1, Cere's raw content type, BLAKE3 multihash,
 /// 32-byte digest. The codec is Cere's own, not IPLD's raw codec.
 pub const CERE_RAW_CID_PREFIX: [u8; 4] = [0x01, 0x02, 0x1e, 0x20];
@@ -661,7 +665,7 @@ pub struct PayoutFingerprintParams<AccountId> {
 	pub cluster_id: ClusterId,
 	pub era: EhdEra,
 	pub insp_receipt_cid: InspReceiptCid,
-	pub ehd_merkle_root: H256,
+	pub ehd_cid: EhdCid,
 	pub payers_merkle_root: PayableUsageHash,
 	pub payees_merkle_root: PayableUsageHash,
 	pub validators: BTreeSet<AccountId>,

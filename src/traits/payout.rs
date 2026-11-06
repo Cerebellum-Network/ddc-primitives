@@ -1,9 +1,8 @@
 use polkadot_sdk::frame_system::pallet_prelude::BlockNumberFor;
-use polkadot_sdk::sp_core::H256;
 use polkadot_sdk::sp_runtime::{DispatchError, DispatchResult};
 
 use crate::{
-	BatchIndex, ClusterId, EhdEra, Fingerprint, InspReceiptCid, MMRProof, PayableUsageHash,
+	BatchIndex, ClusterId, EhdCid, EhdEra, Fingerprint, InspReceiptCid, MMRProof, PayableUsageHash,
 	PaymentEra, PayoutError, PayoutFingerprintParams, PayoutReceiptParams, PayoutState,
 };
 
@@ -27,7 +26,7 @@ pub trait PayoutProcessor<T: polkadot_sdk::frame_system::Config> {
 		cluster_id: ClusterId,
 		era_id: EhdEra,
 		insp_receipt_cid: InspReceiptCid,
-		ehd_merkle_root: H256,
+		ehd_cid: EhdCid,
 		payers_merkle_root: PayableUsageHash,
 		payees_merkle_root: PayableUsageHash,
 	) -> DispatchResult;
