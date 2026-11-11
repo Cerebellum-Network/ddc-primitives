@@ -474,7 +474,9 @@ pub enum ClusterNodeKind {
 	External,
 }
 
-/// DDC node status in to DDC cluster
+/// DDC node status in to DDC cluster. Every node added to a cluster is
+/// `ValidationSucceeded`; the other two variants are kept so records holding them
+/// still decode.
 #[derive(
 	Clone,
 	Encode,
