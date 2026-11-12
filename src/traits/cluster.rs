@@ -4,7 +4,7 @@ use polkadot_sdk::sp_std::prelude::*;
 use crate::{
 	ClusterBondingParams, ClusterFeesParams, ClusterId, ClusterNodeKind, ClusterNodeState,
 	ClusterNodeStatus, ClusterNodesStats, ClusterParams, ClusterPricingParams,
-	ClusterProtocolParams, ClusterStatus, EhdEra, InspectionDryRunParams, NodePubKey, NodeType,
+	ClusterProtocolParams, ClusterStatus, EhdEra, NodePubKey, NodeType,
 };
 
 pub trait ClusterQuery<AccountId> {
@@ -90,17 +90,7 @@ pub trait ClusterManager<AccountId, BlockNumber>: ClusterQuery<AccountId> {
 
 	fn get_nodes_stats(cluster_id: &ClusterId) -> Result<ClusterNodesStats, DispatchError>;
 
-	fn validate_node(
-		cluster_id: &ClusterId,
-		node_pub_key: &NodePubKey,
-		succeeded: bool,
-	) -> Result<(), DispatchError>;
-
 	fn get_clusters(status: ClusterStatus) -> Result<Vec<ClusterId>, DispatchError>;
-
-	fn get_inspection_dry_run_params(
-		cluster_id: &ClusterId,
-	) -> Result<Option<InspectionDryRunParams>, DispatchError>;
 }
 
 pub trait ClusterValidator {

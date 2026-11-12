@@ -71,7 +71,8 @@ pub trait PayoutProcessor<T: polkadot_sdk::frame_system::Config> {
 
 	fn end_payout(cluster_id: ClusterId, era_id: PaymentEra) -> DispatchResult;
 
-	fn get_payout_state(cluster_id: &ClusterId, era_id: PaymentEra) -> PayoutState;
+	/// The state of the era's payout receipt, or `None` when there is no receipt.
+	fn get_payout_state(cluster_id: &ClusterId, era_id: PaymentEra) -> Option<PayoutState>;
 
 	fn is_customers_charging_finished(cluster_id: &ClusterId, era_id: PaymentEra) -> bool;
 
