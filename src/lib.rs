@@ -553,22 +553,19 @@ pub enum PayoutError {
 	InvalidPayoutReceiptParams,
 }
 
-#[derive(
-	Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Default,
-)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
 // don't remove or change numbers, if needed add a new state to the end with new number
 // DAC uses the state value for integration!
+// The numbering was reset once, when NotInitialized (1) was removed: the runtime and
+// ddc-node's reader of these numbers changed in the same release, and every stored
+// receipt was cleared at that upgrade.
 pub enum PayoutState {
-	/// Never stored and never returned: an era without a receipt has no state. Kept so
-	/// a stored state of 1 still decodes.
-	#[default]
-	NotInitialized = 1,
-	Initialized = 2,
-	ChargingCustomers = 3,
-	CustomersChargedWithFees = 4,
-	RewardingProviders = 5,
-	ProvidersRewarded = 6,
-	Finalized = 7,
+	Initialized = 1,
+	ChargingCustomers = 2,
+	CustomersChargedWithFees = 3,
+	RewardingProviders = 4,
+	ProvidersRewarded = 5,
+	Finalized = 6,
 }
 
 #[derive(PartialEq, Eq, Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo)]
@@ -627,7 +624,6 @@ pub mod crypto {
 	}
 }
 
-#[derive(Default)]
 pub struct PayoutReceiptParams {
 	pub cluster_id: ClusterId,
 	pub era: EhdEra,
@@ -679,4 +675,32 @@ pub fn try_hex_from_string(value: String) -> Result<H256, &'static str> {
 	hash.copy_from_slice(&hex_bytes[..32]);
 
 	Ok(H256::from(hash))
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn each_payout_state_encodes_as_its_declared_number() {
+		let states = [
+			(PayoutState::Initialized, 1u8),
+			(PayoutState::ChargingCustomers, 2),
+			(PayoutState::CustomersChargedWithFees, 3),
+			(PayoutState::RewardingProviders, 4),
+			(PayoutState::ProvidersRewarded, 5),
+			(PayoutState::Finalized, 6),
+		];
+		for (state, number) in states {
+			assert_eq!(state.encode(), vec![number], "{state:?}");
+			assert_eq!(PayoutState::decode(&mut &[number][..]), Ok(state));
+		}
+	}
+
+	#[test]
+	fn no_payout_state_decodes_outside_one_to_six() {
+		for number in [0u8, 7] {
+			assert!(PayoutState::decode(&mut &[number][..]).is_err(), "{number}");
+		}
+	}
 }
