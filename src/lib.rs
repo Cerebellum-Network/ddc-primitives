@@ -72,6 +72,15 @@ pub type DeltaUsageHash = H256;
 pub type PayableUsageHash = H256;
 /// Selective hash of sensitive information for payouts.
 pub type Fingerprint = H256;
+/// Length of a CID of a raw DDC piece: the 4-byte prefix and a 32-byte BLAKE3 digest.
+pub const CERE_RAW_CID_LEN: usize = 36;
+/// CID of an inspection receipt stored in DDC as a raw piece.
+pub type InspReceiptCid = [u8; CERE_RAW_CID_LEN];
+/// CID of an era's EHD document stored in DDC as a raw piece.
+pub type EhdCid = [u8; CERE_RAW_CID_LEN];
+/// CIDv1 prefix of a raw DDC piece: version 1, Cere's raw content type, BLAKE3 multihash,
+/// 32-byte digest. The codec is Cere's own, not IPLD's raw codec.
+pub const CERE_RAW_CID_PREFIX: [u8; 4] = [0x01, 0x02, 0x1e, 0x20];
 
 pub type BatchIndex = u16;
 pub const AVG_SECONDS_MONTH: i64 = 2630016; // 30.44 * 24.0 * 3600.0;
@@ -101,7 +110,6 @@ pub struct ClusterParams<AccountId> {
     pub erasure_coding_required: u32,
     pub erasure_coding_total: u32,
     pub replication_total: u32,
-    pub inspection_dry_run_params: Option<InspectionDryRunParams>,
 }
 
 #[cfg(feature = "std")]
@@ -112,7 +120,6 @@ impl<AccountId> Default for ClusterParams<AccountId> {
             erasure_coding_required: 0,
             erasure_coding_total: 0,
             replication_total: 0,
-            inspection_dry_run_params: None,
         }
     }
 }
@@ -190,23 +197,6 @@ pub struct ClusterBondingParams<BlockNumber> {
 pub struct AggregatorInfo {
     pub node_pub_key: NodePubKey,
     pub node_params: StorageNodeParams,
-}
-
-#[derive(
-    Clone,
-    Encode,
-    Decode,
-    DecodeWithMemTracking,
-    RuntimeDebug,
-    TypeInfo,
-    PartialEq,
-    Serialize,
-    Deserialize,
-)]
-pub struct InspectionDryRunParams {
-    pub enabled: bool,
-    pub sync_node_key: NodePubKey,
-    pub sync_node_params: StorageNodeParams,
 }
 
 // The `StoragePubKey` is the only variant of DDC node key. This enum should be replaced with
@@ -424,8 +414,6 @@ pub enum StorageNodeMode {
 pub struct StorageNodeParams {
     pub mode: StorageNodeMode,
     pub host: Vec<u8>,
-    pub domain: Vec<u8>,
-    pub ssl: bool,
     pub http_port: u16,
     pub grpc_port: u16,
     pub p2p_port: u16,
@@ -437,8 +425,6 @@ impl Default for StorageNodeParams {
         StorageNodeParams {
             mode: StorageNodeMode::Full,
             host: Default::default(),
-            domain: Default::default(),
-            ssl: Default::default(),
             http_port: Default::default(),
             grpc_port: Default::default(),
             p2p_port: Default::default(),
@@ -488,7 +474,9 @@ pub enum ClusterNodeKind {
     External,
 }
 
-/// DDC node status in to DDC cluster
+/// DDC node status in to DDC cluster. Every node added to a cluster is
+/// `ValidationSucceeded`; the other two variants are kept so records holding them
+/// still decode.
 #[derive(
     Clone,
     Encode,
@@ -565,20 +553,19 @@ pub enum PayoutError {
     InvalidPayoutReceiptParams,
 }
 
-#[derive(
-    Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq, Default,
-)]
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo, PartialEq)]
 // don't remove or change numbers, if needed add a new state to the end with new number
 // DAC uses the state value for integration!
+// The numbering was reset once, when NotInitialized (1) was removed: the runtime and
+// ddc-node's reader of these numbers changed in the same release, and every stored
+// receipt was cleared at that upgrade.
 pub enum PayoutState {
-    #[default]
-    NotInitialized = 1,
-    Initialized = 2,
-    ChargingCustomers = 3,
-    CustomersChargedWithFees = 4,
-    RewardingProviders = 5,
-    ProvidersRewarded = 6,
-    Finalized = 7,
+    Initialized = 1,
+    ChargingCustomers = 2,
+    CustomersChargedWithFees = 3,
+    RewardingProviders = 4,
+    ProvidersRewarded = 5,
+    Finalized = 6,
 }
 
 #[derive(PartialEq, Eq, Clone, Encode, Decode, DecodeWithMemTracking, RuntimeDebug, TypeInfo)]
@@ -637,7 +624,6 @@ pub mod crypto {
     }
 }
 
-#[derive(Default)]
 pub struct PayoutReceiptParams {
     pub cluster_id: ClusterId,
     pub era: EhdEra,
@@ -652,12 +638,11 @@ pub struct PayoutReceiptParams {
     pub rewarding_processed_batches: Vec<BatchIndex>,
 }
 
-#[derive(Default)]
 pub struct PayoutFingerprintParams<AccountId> {
     pub cluster_id: ClusterId,
     pub era: EhdEra,
-    pub inspection_hash: H256,
-    pub ehd_merkle_root: H256,
+    pub insp_receipt_cid: InspReceiptCid,
+    pub ehd_cid: EhdCid,
     pub payers_merkle_root: PayableUsageHash,
     pub payees_merkle_root: PayableUsageHash,
     pub validators: BTreeSet<AccountId>,
@@ -690,4 +675,32 @@ pub fn try_hex_from_string(value: String) -> Result<H256, &'static str> {
     hash.copy_from_slice(&hex_bytes[..32]);
 
     Ok(H256::from(hash))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn each_payout_state_encodes_as_its_declared_number() {
+        let states = [
+            (PayoutState::Initialized, 1u8),
+            (PayoutState::ChargingCustomers, 2),
+            (PayoutState::CustomersChargedWithFees, 3),
+            (PayoutState::RewardingProviders, 4),
+            (PayoutState::ProvidersRewarded, 5),
+            (PayoutState::Finalized, 6),
+        ];
+        for (state, number) in states {
+            assert_eq!(state.encode(), vec![number], "{state:?}");
+            assert_eq!(PayoutState::decode(&mut &[number][..]), Ok(state));
+        }
+    }
+
+    #[test]
+    fn no_payout_state_decodes_outside_one_to_six() {
+        for number in [0u8, 7] {
+            assert!(PayoutState::decode(&mut &[number][..]).is_err(), "{number}");
+        }
+    }
 }
