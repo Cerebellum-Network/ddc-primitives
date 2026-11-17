@@ -12,8 +12,25 @@ pub const IN_FLIGHT_PREFIX: &[u8] = b"ocwqf";
 pub const QUARANTINE_PREFIX: &[u8] = b"ocwqq";
 pub const UNREACHABLE_PREFIX: &[u8] = b"ocwqu";
 
-/// Consecutive discovery walks in which no collector answered before a cluster is quarantined.
-pub const UNREACHABLE_WALKS_BEFORE_QUARANTINE: u32 = 3;
+/// Discovery walks in which no collector answered, since the first of them.
+#[derive(Encode, Decode)]
+struct UnreachableRecord {
+	walks: u32,
+	first_failure_millis: u64,
+	last_failure_millis: u64,
+}
+
+impl UnreachableRecord {
+	fn starting_at(now: u64) -> Self {
+		Self { walks: 1, first_failure_millis: now, last_failure_millis: now }
+	}
+
+	fn arms(&self, min_walks: u32, tolerance_millis: u64) -> bool {
+		self.walks >= min_walks
+			&& self.last_failure_millis.saturating_sub(self.first_failure_millis)
+				>= tolerance_millis
+	}
+}
 
 /// Why a cluster was not admitted into the current off-chain worker pass.
 #[derive(Debug, PartialEq, Eq)]
@@ -77,11 +94,7 @@ impl OcwClusterQueue {
 
 		if local_storage_get(StorageKind::PERSISTENT, &in_flight_key).is_some() {
 			let until_millis = now.saturating_add(self.quarantine.millis());
-			local_storage_set(
-				StorageKind::PERSISTENT,
-				&quarantine_key,
-				&until_millis.encode(),
-			);
+			local_storage_set(StorageKind::PERSISTENT, &quarantine_key, &until_millis.encode());
 			local_storage_clear(StorageKind::PERSISTENT, &in_flight_key);
 
 			return Err(SkipReason::CrashDetected { until_millis });
@@ -94,15 +107,20 @@ impl OcwClusterQueue {
 
 	/// Records whether a discovery walk over `cluster_id`'s collectors found one that answered.
 	///
-	/// After [`UNREACHABLE_WALKS_BEFORE_QUARANTINE`] consecutive walks that found none, the
-	/// cluster is quarantined for `quarantine`, and `try_enter` skips it until that lapses. Any
-	/// walk that found one resets the count. The count is kept through the quarantine, so the
-	/// single retry after it lapses re-arms it on failure. Returns the quarantine deadline when
-	/// one was set.
+	/// The cluster is quarantined for `quarantine`, and `try_enter` skips it until that lapses,
+	/// when at least `min_walks` walks have found none AND at least `tolerance` has passed since
+	/// the first of them. Both must hold: `min_walks` is a minimum sample, never a route to
+	/// arming on its own, and how long `min_walks` walks take depends on how often the caller
+	/// walks. A failure more than `tolerance` after the previous one starts the count again. Any
+	/// walk that found one clears it. A count that has armed is kept through the quarantine, so
+	/// the single retry after it lapses re-arms it on failure. Returns the quarantine deadline
+	/// when one was set.
 	pub fn record_discovery(
 		&self,
 		cluster_id: &ClusterId,
 		reachable: bool,
+		min_walks: u32,
+		tolerance: Duration,
 		quarantine: Duration,
 	) -> Option<u64> {
 		let unreachable_key = self.unreachable_key(cluster_id);
@@ -111,16 +129,27 @@ impl OcwClusterQueue {
 			return None;
 		}
 
-		let walks = local_storage_get(StorageKind::PERSISTENT, &unreachable_key)
-			.and_then(|raw| u32::decode(&mut &raw[..]).ok())
-			.unwrap_or(0)
-			.saturating_add(1);
-		local_storage_set(StorageKind::PERSISTENT, &unreachable_key, &walks.encode());
-		if walks < UNREACHABLE_WALKS_BEFORE_QUARANTINE {
+		let now = timestamp().unix_millis();
+		let tolerance_millis = tolerance.millis();
+		let record = match local_storage_get(StorageKind::PERSISTENT, &unreachable_key)
+			.and_then(|raw| UnreachableRecord::decode(&mut &raw[..]).ok())
+		{
+			Some(previous)
+				if previous.arms(min_walks, tolerance_millis)
+					|| now.saturating_sub(previous.last_failure_millis) <= tolerance_millis =>
+				UnreachableRecord {
+					walks: previous.walks.saturating_add(1),
+					first_failure_millis: previous.first_failure_millis,
+					last_failure_millis: now,
+				},
+			_ => UnreachableRecord::starting_at(now),
+		};
+		local_storage_set(StorageKind::PERSISTENT, &unreachable_key, &record.encode());
+		if !record.arms(min_walks, tolerance_millis) {
 			return None;
 		}
 
-		let until_millis = timestamp().unix_millis().saturating_add(quarantine.millis());
+		let until_millis = now.saturating_add(quarantine.millis());
 		local_storage_set(
 			StorageKind::PERSISTENT,
 			&self.quarantine_key(cluster_id),
@@ -271,8 +300,10 @@ mod tests {
 	fn keeps_queues_of_different_workers_independent() {
 		with_offchain(|_set_now| {
 			let inspection = queue();
-			let payout =
-				OcwClusterQueue::new(b"other_lock".to_vec(), Duration::from_millis(QUARANTINE_MILLIS));
+			let payout = OcwClusterQueue::new(
+				b"other_lock".to_vec(),
+				Duration::from_millis(QUARANTINE_MILLIS),
+			);
 
 			core::mem::forget(inspection.try_enter(&cluster(1)).expect("first pass admitted"));
 			let _ = inspection.try_enter(&cluster(1));
@@ -282,40 +313,111 @@ mod tests {
 	}
 
 	const UNREACHABLE_MILLIS: u64 = 10_000;
+	const TOLERANCE_MILLIS: u64 = 3_000;
+	const MIN_WALKS: u32 = 3;
 
 	fn record_unreachable(queue: &OcwClusterQueue, byte: u8) -> Option<u64> {
-		queue.record_discovery(&cluster(byte), false, Duration::from_millis(UNREACHABLE_MILLIS))
+		queue.record_discovery(
+			&cluster(byte),
+			false,
+			MIN_WALKS,
+			Duration::from_millis(TOLERANCE_MILLIS),
+			Duration::from_millis(UNREACHABLE_MILLIS),
+		)
+	}
+
+	fn record_reachable(queue: &OcwClusterQueue, byte: u8) {
+		queue.record_discovery(
+			&cluster(byte),
+			true,
+			MIN_WALKS,
+			Duration::from_millis(TOLERANCE_MILLIS),
+			Duration::from_millis(UNREACHABLE_MILLIS),
+		);
+	}
+
+	/// Fails `walks` discovery walks over `cluster(1)`, evenly spread from `start` to `end`.
+	fn fail_walks(
+		queue: &OcwClusterQueue,
+		set_now: &mut dyn FnMut(u64),
+		walks: u32,
+		start: u64,
+		end: u64,
+	) -> Option<u64> {
+		let mut armed = None;
+		for walk in 0..walks {
+			let step = (end - start) / u64::from(walks.max(2) - 1);
+			set_now(start + step * u64::from(walk));
+			armed = record_unreachable(queue, 1);
+		}
+		armed
 	}
 
 	#[test]
-	fn quarantines_a_cluster_after_consecutive_walks_find_no_collector() {
-		with_offchain(|_set_now| {
+	fn quarantines_a_cluster_once_failed_walks_span_the_tolerance() {
+		with_offchain(|set_now| {
 			let queue = queue();
-			for _ in 1..UNREACHABLE_WALKS_BEFORE_QUARANTINE {
-				assert_eq!(record_unreachable(&queue, 1), None);
-				assert!(queue.try_enter(&cluster(1)).is_ok());
-			}
+			let armed = fail_walks(&queue, set_now, MIN_WALKS, 0, TOLERANCE_MILLIS);
 
-			assert_eq!(record_unreachable(&queue, 1), Some(UNREACHABLE_MILLIS));
+			assert_eq!(armed, Some(TOLERANCE_MILLIS + UNREACHABLE_MILLIS));
 			assert_eq!(
 				queue.try_enter(&cluster(1)).err(),
-				Some(SkipReason::Quarantined { until_millis: UNREACHABLE_MILLIS })
+				Some(SkipReason::Quarantined {
+					until_millis: TOLERANCE_MILLIS + UNREACHABLE_MILLIS
+				})
 			);
 		});
 	}
 
 	#[test]
-	fn a_walk_that_finds_a_collector_resets_the_count() {
-		with_offchain(|_set_now| {
+	fn does_not_quarantine_failed_walks_shorter_than_the_tolerance() {
+		with_offchain(|set_now| {
 			let queue = queue();
-			for _ in 1..UNREACHABLE_WALKS_BEFORE_QUARANTINE {
-				record_unreachable(&queue, 1);
-			}
-			queue.record_discovery(&cluster(1), true, Duration::from_millis(UNREACHABLE_MILLIS));
+			let armed = fail_walks(&queue, set_now, 10, 0, TOLERANCE_MILLIS - 1);
 
-			for _ in 1..UNREACHABLE_WALKS_BEFORE_QUARANTINE {
-				assert_eq!(record_unreachable(&queue, 1), None);
-			}
+			assert_eq!(armed, None);
+			assert!(queue.try_enter(&cluster(1)).is_ok());
+
+			set_now(TOLERANCE_MILLIS);
+			assert_eq!(record_unreachable(&queue, 1), Some(TOLERANCE_MILLIS + UNREACHABLE_MILLIS));
+		});
+	}
+
+	#[test]
+	fn does_not_quarantine_fewer_failed_walks_than_the_minimum_however_long_they_span() {
+		with_offchain(|set_now| {
+			let queue = queue();
+			let armed = fail_walks(&queue, set_now, MIN_WALKS - 1, 0, TOLERANCE_MILLIS);
+
+			assert_eq!(armed, None);
+			assert!(queue.try_enter(&cluster(1)).is_ok());
+		});
+	}
+
+	#[test]
+	fn a_gap_longer_than_the_tolerance_starts_the_count_again() {
+		with_offchain(|set_now| {
+			let queue = queue();
+			fail_walks(&queue, set_now, 2, 0, TOLERANCE_MILLIS / 2);
+
+			let restart = TOLERANCE_MILLIS / 2 + TOLERANCE_MILLIS + 1;
+			let armed = fail_walks(&queue, set_now, 2, restart, restart + TOLERANCE_MILLIS / 2);
+
+			assert_eq!(armed, None);
+			assert!(queue.try_enter(&cluster(1)).is_ok());
+		});
+	}
+
+	#[test]
+	fn a_walk_that_finds_a_collector_clears_the_count() {
+		with_offchain(|set_now| {
+			let queue = queue();
+			fail_walks(&queue, set_now, 2, 0, TOLERANCE_MILLIS);
+			record_reachable(&queue, 1);
+
+			let armed =
+				fail_walks(&queue, set_now, MIN_WALKS - 1, TOLERANCE_MILLIS, TOLERANCE_MILLIS * 2);
+			assert_eq!(armed, None);
 			assert!(queue.try_enter(&cluster(1)).is_ok());
 		});
 	}
@@ -324,13 +426,13 @@ mod tests {
 	fn retries_an_unreachable_cluster_once_its_quarantine_lapses_and_rearms_on_failure() {
 		with_offchain(|set_now| {
 			let queue = queue();
-			for _ in 0..UNREACHABLE_WALKS_BEFORE_QUARANTINE {
-				record_unreachable(&queue, 1);
-			}
+			fail_walks(&queue, set_now, MIN_WALKS, 0, TOLERANCE_MILLIS);
 
-			set_now(UNREACHABLE_MILLIS);
+			let lapsed = TOLERANCE_MILLIS + UNREACHABLE_MILLIS;
+			assert!(UNREACHABLE_MILLIS > TOLERANCE_MILLIS);
+			set_now(lapsed);
 			drop(queue.try_enter(&cluster(1)).expect("retried after the quarantine lapsed"));
-			assert_eq!(record_unreachable(&queue, 1), Some(UNREACHABLE_MILLIS * 2));
+			assert_eq!(record_unreachable(&queue, 1), Some(lapsed + UNREACHABLE_MILLIS));
 			assert!(queue.try_enter(&cluster(1)).is_err());
 		});
 	}
@@ -339,11 +441,9 @@ mod tests {
 	fn an_unreachable_quarantine_lapses_after_its_own_duration_not_the_crash_one() {
 		with_offchain(|set_now| {
 			let queue = queue();
-			for _ in 0..UNREACHABLE_WALKS_BEFORE_QUARANTINE {
-				record_unreachable(&queue, 1);
-			}
+			fail_walks(&queue, set_now, MIN_WALKS, 0, TOLERANCE_MILLIS);
 
-			set_now(UNREACHABLE_MILLIS);
+			set_now(TOLERANCE_MILLIS + UNREACHABLE_MILLIS);
 			assert!(UNREACHABLE_MILLIS < QUARANTINE_MILLIS);
 			assert!(queue.try_enter(&cluster(1)).is_ok());
 		});
@@ -351,17 +451,33 @@ mod tests {
 
 	#[test]
 	fn an_unreachable_cluster_does_not_hold_back_others_or_another_worker() {
-		with_offchain(|_set_now| {
+		with_offchain(|set_now| {
 			let payout = queue();
-			let inspection =
-				OcwClusterQueue::new(b"other_lock".to_vec(), Duration::from_millis(QUARANTINE_MILLIS));
-			for _ in 0..UNREACHABLE_WALKS_BEFORE_QUARANTINE {
-				record_unreachable(&payout, 1);
-			}
+			let inspection = OcwClusterQueue::new(
+				b"other_lock".to_vec(),
+				Duration::from_millis(QUARANTINE_MILLIS),
+			);
+			fail_walks(&payout, set_now, MIN_WALKS, 0, TOLERANCE_MILLIS);
 
 			assert!(payout.try_enter(&cluster(1)).is_err());
 			assert!(payout.try_enter(&cluster(2)).is_ok());
 			assert!(inspection.try_enter(&cluster(1)).is_ok());
+		});
+	}
+
+	#[test]
+	fn a_count_stored_in_the_previous_format_starts_again() {
+		with_offchain(|set_now| {
+			let queue = queue();
+			local_storage_set(
+				StorageKind::PERSISTENT,
+				&queue.unreachable_key(&cluster(1)),
+				&MIN_WALKS.encode(),
+			);
+
+			set_now(TOLERANCE_MILLIS);
+			assert_eq!(record_unreachable(&queue, 1), None);
+			assert!(queue.try_enter(&cluster(1)).is_ok());
 		});
 	}
 }
