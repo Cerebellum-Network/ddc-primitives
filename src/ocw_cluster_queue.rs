@@ -12,11 +12,6 @@ pub const IN_FLIGHT_PREFIX: &[u8] = b"ocwqf";
 pub const QUARANTINE_PREFIX: &[u8] = b"ocwqq";
 pub const UNREACHABLE_PREFIX: &[u8] = b"ocwqu";
 
-/// Fewest discovery walks in which no collector answered before a cluster is quarantined. The
-/// failures must also span the tolerance given to [`OcwClusterQueue::record_discovery`]; this
-/// floor only stops a single observation that spans a stall from arming on its own.
-pub const UNREACHABLE_WALKS_BEFORE_QUARANTINE: u32 = 3;
-
 /// Discovery walks in which no collector answered, since the first of them.
 #[derive(Encode, Decode)]
 struct UnreachableRecord {
@@ -34,8 +29,8 @@ impl UnreachableRecord {
         }
     }
 
-    fn arms(&self, tolerance_millis: u64) -> bool {
-        self.walks >= UNREACHABLE_WALKS_BEFORE_QUARANTINE
+    fn arms(&self, min_walks: u32, tolerance_millis: u64) -> bool {
+        self.walks >= min_walks
             && self
                 .last_failure_millis
                 .saturating_sub(self.first_failure_millis)
@@ -124,15 +119,18 @@ impl OcwClusterQueue {
     /// Records whether a discovery walk over `cluster_id`'s collectors found one that answered.
     ///
     /// The cluster is quarantined for `quarantine`, and `try_enter` skips it until that lapses,
-    /// once walks that found none have gone on for at least `tolerance` since the first of them,
-    /// over at least [`UNREACHABLE_WALKS_BEFORE_QUARANTINE`] walks. A failure more than
-    /// `tolerance` after the previous one starts the count again. Any walk that found one clears
-    /// it. A count that has armed is kept through the quarantine, so the single retry after it
-    /// lapses re-arms it on failure. Returns the quarantine deadline when one was set.
+    /// when at least `min_walks` walks have found none AND at least `tolerance` has passed since
+    /// the first of them. Both must hold: `min_walks` is a minimum sample, never a route to
+    /// arming on its own, and how long `min_walks` walks take depends on how often the caller
+    /// walks. A failure more than `tolerance` after the previous one starts the count again. Any
+    /// walk that found one clears it. A count that has armed is kept through the quarantine, so
+    /// the single retry after it lapses re-arms it on failure. Returns the quarantine deadline
+    /// when one was set.
     pub fn record_discovery(
         &self,
         cluster_id: &ClusterId,
         reachable: bool,
+        min_walks: u32,
         tolerance: Duration,
         quarantine: Duration,
     ) -> Option<u64> {
@@ -148,7 +146,7 @@ impl OcwClusterQueue {
             .and_then(|raw| UnreachableRecord::decode(&mut &raw[..]).ok())
         {
             Some(previous)
-                if previous.arms(tolerance_millis)
+                if previous.arms(min_walks, tolerance_millis)
                     || now.saturating_sub(previous.last_failure_millis) <= tolerance_millis =>
             {
                 UnreachableRecord {
@@ -160,7 +158,7 @@ impl OcwClusterQueue {
             _ => UnreachableRecord::starting_at(now),
         };
         local_storage_set(StorageKind::PERSISTENT, &unreachable_key, &record.encode());
-        if !record.arms(tolerance_millis) {
+        if !record.arms(min_walks, tolerance_millis) {
             return None;
         }
 
@@ -345,11 +343,13 @@ mod tests {
 
     const UNREACHABLE_MILLIS: u64 = 10_000;
     const TOLERANCE_MILLIS: u64 = 3_000;
+    const MIN_WALKS: u32 = 3;
 
     fn record_unreachable(queue: &OcwClusterQueue, byte: u8) -> Option<u64> {
         queue.record_discovery(
             &cluster(byte),
             false,
+            MIN_WALKS,
             Duration::from_millis(TOLERANCE_MILLIS),
             Duration::from_millis(UNREACHABLE_MILLIS),
         )
@@ -359,6 +359,7 @@ mod tests {
         queue.record_discovery(
             &cluster(byte),
             true,
+            MIN_WALKS,
             Duration::from_millis(TOLERANCE_MILLIS),
             Duration::from_millis(UNREACHABLE_MILLIS),
         );
@@ -385,13 +386,7 @@ mod tests {
     fn quarantines_a_cluster_once_failed_walks_span_the_tolerance() {
         with_offchain(|set_now| {
             let queue = queue();
-            let armed = fail_walks(
-                &queue,
-                set_now,
-                UNREACHABLE_WALKS_BEFORE_QUARANTINE,
-                0,
-                TOLERANCE_MILLIS,
-            );
+            let armed = fail_walks(&queue, set_now, MIN_WALKS, 0, TOLERANCE_MILLIS);
 
             assert_eq!(armed, Some(TOLERANCE_MILLIS + UNREACHABLE_MILLIS));
             assert_eq!(
@@ -424,13 +419,7 @@ mod tests {
     fn does_not_quarantine_fewer_failed_walks_than_the_minimum_however_long_they_span() {
         with_offchain(|set_now| {
             let queue = queue();
-            let armed = fail_walks(
-                &queue,
-                set_now,
-                UNREACHABLE_WALKS_BEFORE_QUARANTINE - 1,
-                0,
-                TOLERANCE_MILLIS,
-            );
+            let armed = fail_walks(&queue, set_now, MIN_WALKS - 1, 0, TOLERANCE_MILLIS);
 
             assert_eq!(armed, None);
             assert!(queue.try_enter(&cluster(1)).is_ok());
@@ -461,7 +450,7 @@ mod tests {
             let armed = fail_walks(
                 &queue,
                 set_now,
-                UNREACHABLE_WALKS_BEFORE_QUARANTINE - 1,
+                MIN_WALKS - 1,
                 TOLERANCE_MILLIS,
                 TOLERANCE_MILLIS * 2,
             );
@@ -474,13 +463,7 @@ mod tests {
     fn retries_an_unreachable_cluster_once_its_quarantine_lapses_and_rearms_on_failure() {
         with_offchain(|set_now| {
             let queue = queue();
-            fail_walks(
-                &queue,
-                set_now,
-                UNREACHABLE_WALKS_BEFORE_QUARANTINE,
-                0,
-                TOLERANCE_MILLIS,
-            );
+            fail_walks(&queue, set_now, MIN_WALKS, 0, TOLERANCE_MILLIS);
 
             let lapsed = TOLERANCE_MILLIS + UNREACHABLE_MILLIS;
             assert!(UNREACHABLE_MILLIS > TOLERANCE_MILLIS);
@@ -502,13 +485,7 @@ mod tests {
     fn an_unreachable_quarantine_lapses_after_its_own_duration_not_the_crash_one() {
         with_offchain(|set_now| {
             let queue = queue();
-            fail_walks(
-                &queue,
-                set_now,
-                UNREACHABLE_WALKS_BEFORE_QUARANTINE,
-                0,
-                TOLERANCE_MILLIS,
-            );
+            fail_walks(&queue, set_now, MIN_WALKS, 0, TOLERANCE_MILLIS);
 
             set_now(TOLERANCE_MILLIS + UNREACHABLE_MILLIS);
             assert!(UNREACHABLE_MILLIS < QUARANTINE_MILLIS);
@@ -524,13 +501,7 @@ mod tests {
                 b"other_lock".to_vec(),
                 Duration::from_millis(QUARANTINE_MILLIS),
             );
-            fail_walks(
-                &payout,
-                set_now,
-                UNREACHABLE_WALKS_BEFORE_QUARANTINE,
-                0,
-                TOLERANCE_MILLIS,
-            );
+            fail_walks(&payout, set_now, MIN_WALKS, 0, TOLERANCE_MILLIS);
 
             assert!(payout.try_enter(&cluster(1)).is_err());
             assert!(payout.try_enter(&cluster(2)).is_ok());
@@ -545,7 +516,7 @@ mod tests {
             local_storage_set(
                 StorageKind::PERSISTENT,
                 &queue.unreachable_key(&cluster(1)),
-                &UNREACHABLE_WALKS_BEFORE_QUARANTINE.encode(),
+                &MIN_WALKS.encode(),
             );
 
             set_now(TOLERANCE_MILLIS);
